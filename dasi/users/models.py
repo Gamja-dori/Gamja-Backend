@@ -1,7 +1,7 @@
 from django.db import models
+# from resume.models import Resume
 
-# Create your models here.
-class SeniorUser:
+class SeniorUser(models.Model):
     user_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=10)
     id = models.CharField(max_length=10)
