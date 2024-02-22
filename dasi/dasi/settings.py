@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'recommend',
+    'resume'
 ]
 
 MIDDLEWARE = [
@@ -133,3 +134,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 최대 파일 크기 (5MB)
+MAX_UPLOAD_SIZE = 5242880
+
+# 허용되는 파일 형식
+ALLOWED_FILE_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+]
