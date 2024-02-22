@@ -1,5 +1,5 @@
 from django.db import models
-# from resume.models import Resume
+from resume.models import Resume
 
 class SeniorUser(models.Model):
     user_id = models.AutoField(primary_key=True)
@@ -8,7 +8,7 @@ class SeniorUser(models.Model):
     password = models.CharField(max_length=20)
     phone_number = models.CharField(max_length=20)
     email = models.CharField(max_length=40, null=True, blank=True)
-    # default_resume = models.ForeignKey(Resume, null=True, blank=True, on_delete=models.SET_NULL)
+    default_resume = models.ForeignKey(Resume, null=True, blank=True, on_delete=models.SET_NULL)
     
     class Meta: # 테이블 이름 지정
         db_table = 'senior_users'
