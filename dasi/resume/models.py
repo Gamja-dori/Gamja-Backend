@@ -70,16 +70,16 @@ class PriorResume(models.Model):
     prior_resume_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     prior_resume_name = models.CharField(max_length=40)
-    prior_resume_file = models.FileField(upload_to='uploads/resumes')
+    prior_resume_file = models.FileField(upload_to='uploads/resume')
 
     class Meta:
         db_table = 'prior_resumes'
 
 class Portfolio(models.Model):
     portfolio_id = models.AutoField(primary_key=True)
-    resume_id = models.ForeignKey(Resumes, on_delete=models.CASCADE)
+    resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     portfolio_name = models.CharField(max_length=40)
-    portfolio_file = models.FileField(upload_to='uploads/portfolios')
+    portfolio_file = models.FileField(upload_to='uploads/portfolio')
     
     class Meta:
         db_table = 'portfolios'

@@ -9,7 +9,8 @@ class SeniorUser(models.Model):
     phone_number = models.CharField(max_length=20)
     email = models.CharField(max_length=40, null=True, blank=True)
     default_resume = models.ForeignKey(Resume, null=True, blank=True, on_delete=models.SET_NULL)
-    
+    profile_image = models.ImageField(upload_to='uploads/profile/senior', null=True, blank=True)
+
     class Meta: # 테이블 이름 지정
         db_table = 'senior_users'
         
@@ -22,7 +23,8 @@ class EnterpriseUser(models.Model):
     phone_number = models.CharField(max_length=20)
     email = models.CharField(max_length=40, null=True, blank=True) # blank: 모델 폼에서 비워둘 수 있는지 여부
     business_number = models.CharField(max_length=20)
-
+    profile_image = models.ImageField(upload_to='uploads/profile/enterprise', null=True, blank=True)
+    
     class Meta: # 테이블 이름 지정
         db_table = 'enterprise_users'
 
