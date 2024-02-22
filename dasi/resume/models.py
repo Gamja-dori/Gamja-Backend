@@ -1,15 +1,14 @@
 from django.db import models
-from users.models import SeniorUser
 
 class Resume(models.Model):
     resume_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(SeniorUser, on_delete=models.CASCADE)
+    user_id = models.ForeignKey('users.SeniorUser', on_delete=models.CASCADE)
     resume_name = models.CharField(max_length=20)
     is_default = models.BooleanField()
     introduction = models.TextField(null=True, blank=True)
     job_group = models.CharField(max_length=20)
     job_role = models.CharField(max_length=20)
-    career = models.IntegerField()
+    career_length = models.IntegerField()
     skills = models.TextField(null=True, blank=True)
     work_type = models.TextField()
     minimum_pay = models.IntegerField()

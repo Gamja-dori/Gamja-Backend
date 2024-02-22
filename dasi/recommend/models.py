@@ -16,7 +16,7 @@ class RecommendedResume(models.Model):
     percentage = models.IntegerField()
     comment = models.CharField(max_length=255, null=True)
     recommend_result = models.ForeignKey(RecommendResult, on_delete=models.CASCADE)
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
-    
+    resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE, default=-1)
+
     class Meta:
         db_table = 'recommended_resumes'
