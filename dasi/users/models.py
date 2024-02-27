@@ -1,11 +1,17 @@
 from django.db import models
 from resume.models import Resume
 
-class SeniorUser(models.Model):
-    user_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=10)
-    id = models.CharField(max_length=10)
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    is_student = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=False)
+
+    
+class SeniorUser(User):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='seniorUser')
+    username = models.CharField(max_length=10)
     password = models.CharField(max_length=20)
+    name = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=20)
     email = models.CharField(max_length=40, null=True, blank=True)
     default_resume = models.ForeignKey(Resume, null=True, blank=True, on_delete=models.SET_NULL)
@@ -15,11 +21,11 @@ class SeniorUser(models.Model):
         db_table = 'senior_users'
         
     
-class EnterpriseUser(models.Model):
-    user_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=10)
-    id = models.CharField(max_length=10)
+class EnterpriseUser(User):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='enterpriseUser')
+    username = models.CharField(max_length=10)
     password = models.CharField(max_length=20)
+    name = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=20)
     email = models.CharField(max_length=40, null=True, blank=True) # blank: 모델 폼에서 비워둘 수 있는지 여부
     business_number = models.CharField(max_length=20)
@@ -39,3 +45,5 @@ class Review(models.Model):
 
     class Meta:
         db_table = 'reviews'
+
+# https://medium.com/geekculture/how-to-implement-multiple-user-types-in-django-b72df7a98dc3
