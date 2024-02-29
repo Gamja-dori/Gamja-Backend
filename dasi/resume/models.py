@@ -1,28 +1,29 @@
 from django.db import models
 
 class Resume(models.Model):
-    resume_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey('users.SeniorUser', on_delete=models.CASCADE)
-    resume_name = models.CharField(max_length=20)
-    is_default = models.BooleanField()
-    introduction = models.TextField(null=True, blank=True)
-    job_group = models.CharField(max_length=20)
-    job_role = models.CharField(max_length=20)
-    career_length = models.IntegerField()
-    skills = models.TextField(null=True, blank=True)
-    work_type = models.TextField()
-    minimum_pay = models.IntegerField()
-    maximum_pay = models.IntegerField()
-    commute_type = models.CharField(max_length=20)
+    user_id = models.ForeignKey('users.SeniorUser', on_delete=models.CASCADE, default=-1)
+    resume_name = models.CharField(max_length=20, default='')
+    is_default = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    introduction = models.TextField(null=True, blank=True, default='')
+    job_group = models.CharField(max_length=20, default='')
+    job_role = models.CharField(max_length=20, default='')
+    career_length = models.IntegerField(default=0)
+    skills = models.TextField(null=True, blank=True, default='[]')
+    work_type = models.TextField(default='')
+    min_hour_pay = models.IntegerField(default=0)
+    max_hour_pay = models.IntegerField(default=50)
+    min_month_pay = models.IntegerField(default=0)
+    max_month_pay = models.IntegerField(default=1000)
+    commute_type = models.CharField(max_length=20, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    view = models.IntegerField()
+    view = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'resumes'
 
 class Career(models.Model):
-    career_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
@@ -33,7 +34,6 @@ class Career(models.Model):
         db_table = 'careers'
 
 class Performance(models.Model):
-    performance_id = models.AutoField(primary_key=True)
     career_id = models.ForeignKey(Career, on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
@@ -44,7 +44,6 @@ class Performance(models.Model):
         db_table = 'performances'
 
 class Education(models.Model):
-    education_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
@@ -55,7 +54,6 @@ class Education(models.Model):
         db_table = 'educations'
 
 class Project(models.Model):
-    project_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
@@ -66,7 +64,6 @@ class Project(models.Model):
         db_table = 'projects'
 
 class PriorResume(models.Model):
-    prior_resume_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     prior_resume_name = models.CharField(max_length=40)
     prior_resume_file = models.FileField(upload_to='uploads/resume')
@@ -75,7 +72,6 @@ class PriorResume(models.Model):
         db_table = 'prior_resumes'
 
 class Portfolio(models.Model):
-    portfolio_id = models.AutoField(primary_key=True)
     resume_id = models.ForeignKey(Resume, on_delete=models.CASCADE)
     portfolio_name = models.CharField(max_length=40)
     portfolio_file = models.FileField(upload_to='uploads/portfolio')
