@@ -10,15 +10,22 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = "__all__"
         
-    def create(self, validated_data):
+    def create(self, validated_data, user_type):
         username = validated_data.pop('username')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
+        if user_type == 1:
+            is_senior = True
+            is_enterprise = False
+        elif user_type == 2:
+            is_senior = False
+            is_enterprise = True
+            
         user = User.objects.create(
             username=username,
             email=email,
-            is_senior=True,
-            is_enterprise=False,
+            is_senior=is_senior,
+            is_enterprise=is_enterprise,
         )
         user.set_password(password)
         user.save()
@@ -34,7 +41,7 @@ class SeniorSerializer(serializers.ModelSerializer):
            
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = UserSerializer.create(UserSerializer(), validated_data=user_data)
+        user = UserSerializer.create(UserSerializer(), validated_data=user_data, user_type=1)
         senior = SeniorUser.objects.create(
             user=user,
             name=validated_data.pop('name'),
@@ -52,7 +59,7 @@ class EnterpriseSerializer(serializers.ModelSerializer):
            
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = UserSerializer.create(UserSerializer(), validated_data=user_data)
+        user = UserSerializer.create(UserSerializer(), validated_data=user_data, user_type=2)
         enterprise = EnterpriseUser.objects.create(
             user=user,
             name=validated_data.pop('name'),
