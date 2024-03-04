@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import SeniorRegisterSerializer, MyTokenObtainPairSerializer
+from .serializers import *
 from .models import *
 from rest_framework import status
 from rest_framework.views import APIView
@@ -15,7 +15,7 @@ class SeniorUserCreate(APIView):
 
     def post(self, request):
         # 비밀번호 유효성 검사
-        pw = request.data.get('password')
+        pw = request.data.get('user').get('password')
         regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,25}'
         if not re.match(regex_pw, pw):
             raise ValidationError("8자 이상의 영문 대/소문자, 숫자, 특수문자 조합을 입력해주세요.")
@@ -24,15 +24,18 @@ class SeniorUserCreate(APIView):
         if not re.search(r"\d", pw):
             raise ValidationError("비밀번호는 하나 이상의 숫자가 포함되어야 합니다.")
         
-        serializer = SeniorRegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            token = TokenObtainPairSerializer.get_token(user)
+        # 유저 생성
+        serializer = SeniorSerializer(data=request.data)
+        
+        if serializer.is_valid(raise_exception=ValueError):
+            senior = serializer.create(validated_data=request.data)
+            # 토큰 생성
+            token = MyTokenObtainPairSerializer.get_token(user=senior.user, username=senior.user.username) 
             refresh_token = str(token)
             access_token = str(token.access_token)
             res = Response(
                 {
-                    "user": serializer.data,
+                    "username": senior.user.username,
                     "message": "회원가입이 완료되었습니다.",
                     "token": {
                         "access": access_token,
