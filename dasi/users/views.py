@@ -22,32 +22,36 @@ def validate_password(pw):
         raise ValidationError("비밀번호는 하나 이상의 숫자가 포함되어야 합니다.")
 
 
-def create_user(request, user_type):
+def create_user(data, user_type):
     if user_type == 1:
-        serializer = SeniorSerializer(data=request.data)
+        serializer = SeniorSerializer(data=data)
     elif user_type == 2:
-        serializer = EnterpriseSerializer(data=request.data)
-        
+        serializer = EnterpriseSerializer(data=data)
+    password = data.get('user', {}).get('password')
+
     if serializer.is_valid(raise_exception=ValueError):
-        member = serializer.create(validated_data=request.data)
+        member = serializer.create(validated_data=data)
         # 토큰 생성
-        token = MyTokenObtainPairSerializer.get_token(user=member.user, username=member.user.username) 
-        refresh_token = str(token)
-        access_token = str(token.access_token)
-        res = Response(
-            {
-                "username": member.user.username,
-                "message": "회원가입이 완료되었습니다.",
-                "token": {
-                    "access": access_token,
-                    "refresh": refresh_token,
+        token_serializer = TokenObtainPairSerializer(data={'username': member.user.username, 'password': password})
+        if token_serializer.is_valid():
+            access_token = str(token_serializer.validated_data['access'])
+            refresh_token = str(token_serializer.validated_data['refresh'])
+
+            res = Response(
+                {
+                    "username": member.user.username,
+                    "message": "회원가입이 완료되었습니다.",
+                    "token": {
+                        "access": access_token,
+                        "refresh": refresh_token,
+                    },
                 },
-            },
-            status=status.HTTP_201_CREATED,
-        )
-        res.set_cookie("access", access_token, httponly=True)
-        res.set_cookie("refresh", refresh_token, httponly=True)
-        return res
+                status=status.HTTP_201_CREATED,
+            )
+            res.set_cookie("access", access_token, httponly=True)
+            res.set_cookie("refresh", refresh_token, httponly=True)
+            return res
+        return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
@@ -60,7 +64,7 @@ class SeniorUserCreate(APIView):
         validate_password(pw)
         
         # 유저 생성
-        response = create_user(request, user_type=1)
+        response = create_user(data=request.data, user_type=1)
         return response  
     
     
@@ -73,12 +77,8 @@ class EnterpriseUserCreate(APIView):
         validate_password(pw)
         
         # 유저 생성
-        response = create_user(request, user_type=2)
+        response = create_user(data=request.data, user_type=2)
         return response  
-    
-    
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
     
 
 class LoginView(APIView):
@@ -89,12 +89,20 @@ class LoginView(APIView):
         if token_serializer.is_valid():
             user = token_serializer.user
             serializer = UserLoginSerializer(user)
-            return Response(
+            access_token = str(token_serializer.validated_data['access'])
+            refresh_token = str(token_serializer.validated_data['refresh'])
+            res = Response(
                 {
                     "user": serializer.data,
                     "message": "로그인에 성공했습니다.",
-                    "token": token_serializer.validated_data,
+                    "access": access_token,
                 },
                 status=status.HTTP_200_OK,
             )
+            res.set_cookie("refresh", refresh_token, httponly=True)
+            return res
         return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+#class Logoutview(APIView):
+    

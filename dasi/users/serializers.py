@@ -73,12 +73,3 @@ class EnterpriseSerializer(serializers.ModelSerializer):
             is_certified=False
         )
         return enterprise
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user, username):
-        token = super().get_token(user)
-        token['username'] = username 
-
-        return token

@@ -7,7 +7,8 @@ urlpatterns = [
     path('enterprise/signup/', EnterpriseUserCreate.as_view()),
     path('login/', LoginView.as_view(), name='login'),
     path('enterprise/login/', LoginView.as_view(), name='login'),
-    path('token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    #path('logout/', LogoutView.as_view(), name='logout'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
