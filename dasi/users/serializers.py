@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.serializers import serialize, deserialize
 
-class UserSerializer(serializers.ModelSerializer):   
+class UserRegisterSerializer(serializers.ModelSerializer):   
     class Meta:
         model = User
         fields = "__all__"
@@ -30,10 +30,15 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
-    
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = "__all__"
+        
         
 class SeniorSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=True)
+    user = UserRegisterSerializer(required=True)
     
     class Meta:
         model = SeniorUser
@@ -41,7 +46,7 @@ class SeniorSerializer(serializers.ModelSerializer):
            
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = UserSerializer.create(UserSerializer(), validated_data=user_data, user_type=1)
+        user = UserRegisterSerializer.create(UserRegisterSerializer(), validated_data=user_data, user_type=1)
         senior = SeniorUser.objects.create(
             user=user,
             name=validated_data.pop('name'),
@@ -51,7 +56,7 @@ class SeniorSerializer(serializers.ModelSerializer):
 
 
 class EnterpriseSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=True)
+    user = UserRegisterSerializer(required=True)
     
     class Meta:
         model = EnterpriseUser
@@ -59,7 +64,7 @@ class EnterpriseSerializer(serializers.ModelSerializer):
            
     def create(self, validated_data):
         user_data = validated_data.pop('user')
-        user = UserSerializer.create(UserSerializer(), validated_data=user_data, user_type=2)
+        user = UserRegisterSerializer.create(UserRegisterSerializer(), validated_data=user_data, user_type=2)
         enterprise = EnterpriseUser.objects.create(
             user=user,
             name=validated_data.pop('name'),

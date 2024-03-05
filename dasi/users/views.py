@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 import re
+from rest_framework.authentication import authenticate
+from django.contrib.auth import login
 
 def validate_password(pw):
     regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,25}'
@@ -77,3 +79,22 @@ class EnterpriseUserCreate(APIView):
     
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    
+
+class LoginView(APIView):
+    permission_classes = [AllowAny] 
+
+    def post(self, request):
+        token_serializer = TokenObtainPairSerializer(data=request.data)
+        if token_serializer.is_valid():
+            user = token_serializer.user
+            serializer = UserLoginSerializer(user)
+            return Response(
+                {
+                    "user": serializer.data,
+                    "message": "로그인에 성공했습니다.",
+                    "token": token_serializer.validated_data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
