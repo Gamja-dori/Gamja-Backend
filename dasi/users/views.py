@@ -88,12 +88,20 @@ class LoginView(APIView):
         token_serializer = TokenObtainPairSerializer(data=request.data)
         if token_serializer.is_valid():
             user = token_serializer.user
+            if user.is_senior:
+                member = SeniorUser.objects.filter(user=user)[0]
+            elif user.is_enterprise:
+                member = EnterpriseUser.objects.filter(user=user)[0]
+                
             serializer = UserLoginSerializer(user)
             access_token = str(token_serializer.validated_data['access'])
             refresh_token = str(token_serializer.validated_data['refresh'])
             res = Response(
                 {
-                    "user": serializer.data,
+                    "id": user.id,
+                    "name": member.name,
+                    "is_senior": user.is_senior,
+                    "is_enterprise": user.is_enterprise,
                     "message": "로그인에 성공했습니다.",
                     "access": access_token,
                 },
@@ -104,5 +112,12 @@ class LoginView(APIView):
         return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-#class Logoutview(APIView):
-    
+class LogoutView(APIView):
+    def post(self, request):
+        # refreshtoken 쿠키 삭제
+        response = Response({
+            "message": "로그아웃이 완료되었습니다."
+            }, status=status.HTTP_202_ACCEPTED)
+        response.delete_cookie('refresh')
+
+        return response
