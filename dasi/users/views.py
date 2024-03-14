@@ -4,13 +4,10 @@ from .models import *
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ValidationError
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 import re
-from rest_framework.authentication import authenticate
-from django.contrib.auth import login
 
 def validate_password(pw):
     regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,25}'
@@ -114,10 +111,11 @@ class LoginView(APIView):
 
 class LogoutView(APIView):
     def post(self, request):
-        # refreshtoken 쿠키 삭제
         response = Response({
             "message": "로그아웃이 완료되었습니다."
-            }, status=status.HTTP_202_ACCEPTED)
+        }, status=status.HTTP_202_ACCEPTED)
+
         response.delete_cookie('refresh')
+        response.delete_cookie('access') 
 
         return response

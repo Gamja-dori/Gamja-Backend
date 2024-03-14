@@ -30,9 +30,9 @@ class EnterpriseUser(models.Model):
     name = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=20)
     business_number = models.CharField(max_length=20)
-    profile_image = models.ImageField(upload_to='uploads/profile/enterprise', null=True, blank=True)
     is_certified = models.BooleanField(default=False) # 사업자번호 인증 여부
-    
+    profile_image = models.ImageField(upload_to='uploads/profile/enterprise', null=True, blank=True)
+
     class Meta: # 테이블 이름 지정
         db_table = 'enterprise_users'
 
