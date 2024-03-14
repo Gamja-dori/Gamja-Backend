@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 import re
 
@@ -119,3 +119,41 @@ class LogoutView(APIView):
         response.delete_cookie('access') 
 
         return response
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_senior:
+            member = SeniorUser.objects.get(user=user)
+        elif user.is_enterprise:
+            member = EnterpriseUser.objects.get(user=user)
+        else:
+            return Response({"error": "Invalid user type"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_data = {
+            "id": user.id,
+            "username": user.username,
+            "name": member.name,
+            "phone_number": member.phone_number,
+            "email": user.email,
+            "is_senior": user.is_senior,
+            "is_enterprise": user.is_enterprise,
+            "message": "회원 정보 조회에 성공했습니다.",
+        }
+        
+        if user.is_senior:
+            response_data['default_resume'] = member.default_resume
+        else:
+            response_data['business_number'] = member.business_number
+            response_data['is_certified'] = member.is_certified   
+        
+                 
+        
+        return Response(response_data, status=status.HTTP_200_OK)
