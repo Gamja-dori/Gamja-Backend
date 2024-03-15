@@ -101,6 +101,7 @@ class LoginView(APIView):
                     "is_enterprise": user.is_enterprise,
                     "message": "로그인에 성공했습니다.",
                     "access": access_token,
+                    "refresh": refresh_token
                 },
                 status=status.HTTP_200_OK,
             )
@@ -124,9 +125,9 @@ class LogoutView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, username):
+    def get(self, request, id):
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(id=id)
         except ObjectDoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -153,7 +154,5 @@ class UserProfileView(APIView):
         else:
             response_data['business_number'] = member.business_number
             response_data['is_certified'] = member.is_certified   
-        
-                 
         
         return Response(response_data, status=status.HTTP_200_OK)
