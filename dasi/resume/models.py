@@ -5,6 +5,7 @@ class Resume(models.Model):
     resume_name = models.CharField(max_length=20, default='')
     is_default = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_uploaded = models.BooleanField(default=False)
     introduction = models.TextField(null=True, blank=True, default='')
     job_group = models.CharField(max_length=20, default='')
     job_role = models.CharField(max_length=20, default='')
