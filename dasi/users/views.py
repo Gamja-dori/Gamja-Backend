@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 import re
+from drf_yasg.utils import swagger_auto_schema
 
 def validate_password(pw):
     regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,25}'
@@ -54,7 +55,8 @@ def create_user(data, user_type):
     
 class SeniorUserCreate(APIView):
     permission_classes = [AllowAny] 
-
+    
+    @swagger_auto_schema(tags=['시니어 사용자 데이터를 생성합니다.'], request_body=SeniorSerializer)
     def post(self, request):
         # 비밀번호 유효성 검사
         pw = request.data.get('user').get('password')
@@ -67,7 +69,8 @@ class SeniorUserCreate(APIView):
     
 class EnterpriseUserCreate(APIView):
     permission_classes = [AllowAny] 
-
+    
+    @swagger_auto_schema(tags=['기업 사용자 데이터를 생성합니다.'], request_body=EnterpriseSerializer)
     def post(self, request):
         # 비밀번호 유효성 검사
         pw = request.data.get('user').get('password')
@@ -81,6 +84,7 @@ class EnterpriseUserCreate(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny] 
 
+    @swagger_auto_schema(tags=['사용자가 로그인합니다.'], request_body=UserLoginSerializer)
     def post(self, request):
         token_serializer = TokenObtainPairSerializer(data=request.data)
         if token_serializer.is_valid():
@@ -111,6 +115,7 @@ class LoginView(APIView):
     
 
 class LogoutView(APIView):
+    @swagger_auto_schema(tags=['사용자가 로그아웃합니다.'])
     def post(self, request):
         response = Response({
             "message": "로그아웃이 완료되었습니다."
@@ -125,6 +130,7 @@ class LogoutView(APIView):
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(tags=['사용자의 정보를 조회합니다.'])
     def get(self, request, id):
         try:
             user = User.objects.get(id=id)
