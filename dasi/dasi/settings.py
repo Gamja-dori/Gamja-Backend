@@ -13,12 +13,13 @@ environ.Env.read_env(
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fctx2sx^tto(+nme_@qcz*mp96*!9&-83rs)qu&=&_=!cr@p8^'
+SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+# 배포 설정
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+DEBUG = False
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'https://dasi-expert.com/']
 
 
 # Application definition
