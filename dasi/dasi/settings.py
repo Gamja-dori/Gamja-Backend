@@ -18,7 +18,7 @@ SECRET_KEY = env('SECRET_KEY')
 # 배포 설정
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'https://dasi-expert.com/']
 
 
