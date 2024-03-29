@@ -18,7 +18,7 @@ WORKDIR /app
 COPY . /app
 
 # 도커 이미지 경량화
-RUN apk del python3-dev mysqlclient-dev build-base
+#RUN apk del python3-dev mysqlclient-dev build-base
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
