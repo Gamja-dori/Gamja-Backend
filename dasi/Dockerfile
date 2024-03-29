@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install pip requirements
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y pkg-config python3-dev default-lib mysqlclient-dev build-essential && pip install mysqlclient
+RUN apt-get update && apt-get install -y pkg-config python3-dev default-libmysqlclient-dev build-essential && pip install mysqlclient
 RUN python -m pip install -r requirements.txt
 
 WORKDIR /app
