@@ -19,7 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'https://dasi-expert.com/']
+ALLOWED_HOSTS = ['52.78.196.185']
 
 
 # Application definition
