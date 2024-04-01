@@ -1,10 +1,23 @@
 version: '3.4'
 
-services:
-  dasi:
-    image: dasi
+services: 
+  nginx:
+    image: nginx:latest # 베이스 이미지 설정
+    ports: # 호스트 포트와 연결
+      - "80:80"
+    volumes: 
+      - .:/code 
+      - /etc/nginx/nginx.conf
+    depends_on: 
+      - web
+
+  web:
     build:
       context: .
-      dockerfile: ./Dockerfile
-    ports:
-      - 8000:8000
+      dockerfile: ./Dockerfile 
+    volumes: 
+      - .:/code
+    ports: #호스트 포트와 컨테이너 포트를 연결
+      - "8000:8000"
+    env_file:
+      - .env

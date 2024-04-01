@@ -2,7 +2,7 @@ import environ, os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(DEBUG=(bool, True))
 environ.Env.read_env(
@@ -19,7 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 DEBUG = True
-ALLOWED_HOSTS = [env('EC2_PUBLIC_ADDR')]
+ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR')]
 
 
 # Application definition
