@@ -9,12 +9,13 @@ from django.conf.urls.static import static
 schema_view = get_schema_view(
     openapi.Info(
         title="Dasi",
-        default_version='1.1.1',
+        default_version='0.1.1',
         description="다시: 시니어 AI 매칭 인재풀의 API 문서입니다.",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="gamjadori15@gmail.com"), # 부가정보
         license=openapi.License(name="mit"),     # 부가정보
     ),
+    url='http://api.dasi-expert.com',
     public=True,
     permission_classes=[permissions.AllowAny],
 )
