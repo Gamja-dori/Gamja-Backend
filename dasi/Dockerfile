@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install pip requirements
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y pkg-config python3-dev default-libmysqlclient-dev build-essential default-libmysqlclient-dev && pip install mysqlclient
+RUN apt-get update && apt-get install -y pkg-config python3-dev default-libmysqlclient-dev build-essential && pip install mysqlclient
 RUN python -m pip install -r requirements.txt
 
 WORKDIR /app
@@ -24,3 +24,5 @@ USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "dasi.wsgi"]
+
+EXPOSE 8000
