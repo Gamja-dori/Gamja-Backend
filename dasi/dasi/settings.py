@@ -50,6 +50,9 @@ INSTALLED_APPS = [
 
     # Swagger 
     'drf_yasg',
+    
+    # CORS
+    'corsheaders',
 ]
 REST_AUTH_TOKEN_MODEL = None
 REST_FRAMEWORK = {
@@ -73,6 +76,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -81,6 +85,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ORIGIN_WHITELIST = ( # 허용할 도메인 
+    'http://localhost:3000',                 
+    'https://dasi-expert.com'
+)
 
 ROOT_URLCONF = 'dasi.urls'
 
