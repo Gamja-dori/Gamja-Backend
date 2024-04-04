@@ -2,7 +2,7 @@ import environ, os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(DEBUG=(bool, True))
 environ.Env.read_env(
@@ -13,12 +13,13 @@ environ.Env.read_env(
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fctx2sx^tto(+nme_@qcz*mp96*!9&-83rs)qu&=&_=!cr@p8^'
+SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# 배포 설정
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "dasi-expert.com"]
 
 
 # Application definition
@@ -49,6 +50,9 @@ INSTALLED_APPS = [
 
     # Swagger 
     'drf_yasg',
+    
+    # CORS
+    'corsheaders',
 ]
 REST_AUTH_TOKEN_MODEL = None
 REST_FRAMEWORK = {
@@ -72,6 +76,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -80,6 +85,30 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS Settings
+CORS_ORIGIN_WHITELIST = ( # 허용할 도메인 
+    'http://localhost:3000',                 
+    'https://dasi-expert.com'
+)
+
+CORS_ALLOW_METHODS = (
+"GET",
+"POST",
+"DELETE",
+"OPTIONS",
+"PATCH",
+"PUT",
+)
+
+CORS_ALLOW_HEADERS = (
+"accept",
+"authorization",
+"content-type",
+"user-agent"
+"x-csrftoken",
+"x-requested-with",
+)
 
 ROOT_URLCONF = 'dasi.urls'
 
@@ -158,7 +187,8 @@ USE_TZ=False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static") 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -175,3 +205,13 @@ ALLOWED_FILE_TYPES = [
     'image/gif',
     'application/pdf',
 ]
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
+}

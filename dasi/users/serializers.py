@@ -34,7 +34,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ['username', 'password']
         
         
 class SeniorSerializer(serializers.ModelSerializer):
