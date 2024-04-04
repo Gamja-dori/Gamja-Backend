@@ -19,7 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "https://dasi-expert.com"]
+ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "dasi-expert.com"]
 
 
 # Application definition
@@ -86,9 +86,28 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# CORS Settings
 CORS_ORIGIN_WHITELIST = ( # 허용할 도메인 
     'http://localhost:3000',                 
     'https://dasi-expert.com'
+)
+
+CORS_ALLOW_METHODS = (
+"GET",
+"POST",
+"DELETE",
+"OPTIONS",
+"PATCH",
+"PUT",
+)
+
+CORS_ALLOW_HEADERS = (
+"accept",
+"authorization",
+"content-type",
+"user-agent"
+"x-csrftoken",
+"x-requested-with",
 )
 
 ROOT_URLCONF = 'dasi.urls'
