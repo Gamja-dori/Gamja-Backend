@@ -5,6 +5,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -15,10 +16,13 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="gamjadori15@gmail.com"), # 부가정보
         license=openapi.License(name="mit"),     # 부가정보
     ),
-    url='http://api.dasi-expert.com',
+    url='https://api.dasi-expert.com',
     public=True,
     permission_classes=[permissions.AllowAny],
 )
+
+def health_check(request): # for aws alb target group
+    return HttpResponse(status=200)
 
 urlpatterns = [
     re_path(r'swagger(?P<format>\.json|\.yaml)', schema_view.without_ui(cache_timeout=0), name='schema-json'),
@@ -26,4 +30,5 @@ urlpatterns = [
     path(r'redoc', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc-v1'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('health/', health_check),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
