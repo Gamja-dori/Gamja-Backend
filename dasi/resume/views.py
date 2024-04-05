@@ -19,6 +19,7 @@ class CreateResumeAPIView(APIView):
                 {
                     "user_id": resume.user.user_id,
                     "resume_id": resume.id,
+                    "title": resume.title,
                     "created_at": resume.created_at,
                     "message": "이력서가 생성되었습니다."
                 },
