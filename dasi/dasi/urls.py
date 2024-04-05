@@ -30,5 +30,6 @@ urlpatterns = [
     path(r'redoc', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc-v1'),
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
+    path('resumes/', include('resume.urls')),
     path('health/', health_check),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
