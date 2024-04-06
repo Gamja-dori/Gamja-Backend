@@ -1,11 +1,12 @@
 from .models import *
-from .serializers import CreateResumeSerializer, EditResumeSerializer
+from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from users.models import SeniorUser
+from django.core.exceptions import ObjectDoesNotExist
 
 class CreateResumeAPIView(APIView):
     permission_classes = [AllowAny] 
@@ -20,8 +21,9 @@ class CreateResumeAPIView(APIView):
                     "user_id": resume.user.user_id,
                     "resume_id": resume.id,
                     "title": resume.title,
+                    "is_default": resume.is_default,
                     "created_at": resume.created_at,
-                    "message": "이력서가 생성되었습니다."
+                    "message": "이력서가 성공적으로 생성되었습니다."
                 },
                 status=status.HTTP_200_OK,
             )
@@ -33,13 +35,104 @@ class DeleteResumeAPIView(APIView):
 
     @swagger_auto_schema(tags=['이력서를 삭제합니다.'])
     def delete(self, request, user_id, resume_id):
-        user = SeniorUser.objects.filter(user_id=user_id)[0]
-        delete_resume = Resume.objects.get(id=resume_id, user=user)
+        try:
+            user = SeniorUser.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            delete_resume = Resume.objects.get(id=resume_id, user=user)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
         delete_resume.delete()
         res = Response(
             {
-                "message": "이력서가 삭제되었습니다."
+                "message": "이력서가 성공적으로 삭제되었습니다."
             },
             status=status.HTTP_200_OK,
         )
         return res
+    
+class ChangeResumeTitleAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['이력서 제목을 변경합니다.'], request_body=ChangeResumeTitleSerializer)
+    def patch(self, request):
+        try:
+            resume_id = request.data.get('resume_id')
+            target_resume = Resume.objects.get(id=resume_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ChangeResumeTitleSerializer(target_resume, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            res = Response(
+                {
+                    "resume_id": target_resume.id,
+                    "title": target_resume.title,
+                    "message": "이력서 제목이 성공적으로 변경되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SetDefaultResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['해당 이력서를 기본 이력서로 설정합니다.'], request_body=FindResumeSerializer)
+    def patch(self, request):
+        try:
+            resume_id = request.data.get('resume_id')
+            target_resume = Resume.objects.get(id=resume_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FindResumeSerializer(target_resume, data=request.data, partial=True)
+        if serializer.is_valid():
+            prior_default_resume = Resume.objects.get(is_default=True)
+            prior_default_resume.is_default = False
+            prior_default_resume.save()
+            target_resume.is_default = True
+            serializer.save()
+            res = Response(
+                {
+                    "resume_id": target_resume.id,
+                    "is_default": target_resume.is_default,
+                    "message": "기본 이력서가 성공적으로 변경되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SubmitResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['이력서를 인재풀에 등록합니다.'], request_body=FindResumeSerializer)
+    def patch(self, request):
+        try:
+            resume_id = request.data.get('resume_id')
+            target_resume = Resume.objects.get(id=resume_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FindResumeSerializer(target_resume, data=request.data, partial=True)
+        if serializer.is_valid():
+            target_resume.is_submitted = True
+            serializer.save()
+            res = Response(
+                {
+                    "resume_id": target_resume.id,
+                    "is_submitted": target_resume.is_submitted,
+                    "message": "이력서가 성공적으로 인재풀에 등록되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+

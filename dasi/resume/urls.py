@@ -1,9 +1,12 @@
 from django.urls import path
-from .views import CreateResumeAPIView, DeleteResumeAPIView
+from .views import CreateResumeAPIView, DeleteResumeAPIView, ChangeResumeTitleAPIView, SetDefaultResumeAPIView, SubmitResumeAPIView, EditResumeAPIView
 
 urlpatterns = [
-    path('new/', CreateResumeAPIView.as_view()),
+    path('create/', CreateResumeAPIView.as_view()),
     path('delete/<int:user_id>/<int:resume_id>/', DeleteResumeAPIView.as_view()),
+    path('new-title/', ChangeResumeTitleAPIView.as_view()),
+    path('submit/', SubmitResumeAPIView.as_view()),
+    path('set-default/', SetDefaultResumeAPIView.as_view()),
 ]
 
 """

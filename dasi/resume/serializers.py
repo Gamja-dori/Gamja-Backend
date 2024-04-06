@@ -13,6 +13,17 @@ class CreateResumeSerializer(serializers.ModelSerializer):
         resume = Resume.objects.create(user=user)
         resume_num = len(Resume.objects.filter(user=user))
         resume.title = "이력서 " + str(resume_num)
+        if len(Resume.objects.filter(user=user)) == 1:
+            resume.is_default = True
         resume.save()
         return resume
-    
+        
+class ChangeResumeTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume
+        fields = ['user', 'id', 'title']
+
+class FindResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume
+        fields = ['user', 'id']
