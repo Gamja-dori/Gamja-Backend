@@ -25,7 +25,7 @@ class Resume(models.Model):
         db_table = 'resumes'
 
 class Career(models.Model):
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    resume = models.ForeignKey(Resume, related_name='careers', on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
     company_name = models.CharField(max_length=40)
@@ -35,7 +35,7 @@ class Career(models.Model):
         db_table = 'careers'
 
 class Performance(models.Model):
-    career = models.ForeignKey(Career, on_delete=models.CASCADE)
+    career = models.ForeignKey(Career, related_name='performances', on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
     performance_name = models.CharField(max_length=40)
@@ -45,7 +45,7 @@ class Performance(models.Model):
         db_table = 'performances'
 
 class Education(models.Model):
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    resume = models.ForeignKey(Resume, related_name='educations', on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
     education_name = models.CharField(max_length=40)
@@ -55,7 +55,7 @@ class Education(models.Model):
         db_table = 'educations'
 
 class Project(models.Model):
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    resume = models.ForeignKey(Resume, related_name='projects', on_delete=models.CASCADE)
     start_year_month = models.CharField(max_length=7)
     end_year_month = models.CharField(max_length=7)
     project_name = models.CharField(max_length=40)
@@ -65,7 +65,7 @@ class Project(models.Model):
         db_table = 'projects'
 
 class PriorResume(models.Model):
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    resume = models.ForeignKey(Resume, related_name='prior_resumes', on_delete=models.CASCADE)
     prior_resume_name = models.CharField(max_length=40)
     prior_resume_file = models.FileField(upload_to='uploads/resume')
 
@@ -73,7 +73,7 @@ class PriorResume(models.Model):
         db_table = 'prior_resumes'
 
 class Portfolio(models.Model):
-    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    resume = models.ForeignKey(Resume, related_name='portfolios', on_delete=models.CASCADE)
     portfolio_name = models.CharField(max_length=40)
     portfolio_file = models.FileField(upload_to='uploads/portfolio')
     
