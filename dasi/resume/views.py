@@ -61,17 +61,17 @@ class ChangeResumeTitleAPIView(APIView):
     def patch(self, request):
         try:
             resume_id = request.data.get('resume_id')
-            target_resume = Resume.objects.get(id=resume_id)
+            resume = Resume.objects.get(id=resume_id)
         except ObjectDoesNotExist:
             return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = ChangeResumeTitleSerializer(target_resume, data=request.data, partial=True)
+        serializer = ChangeResumeTitleSerializer(resume, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             res = Response(
                 {
-                    "resume_id": target_resume.id,
-                    "title": target_resume.title,
+                    "resume_id": resume.id,
+                    "title": resume.title,
                     "message": "이력서 제목이 성공적으로 변경되었습니다."
                 },
                 status=status.HTTP_200_OK,
@@ -133,6 +133,63 @@ class SubmitResumeAPIView(APIView):
             )
             return res
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EditResumeAPIView(APIView):
+    permission_classes = [AllowAny] 
+
+    @swagger_auto_schema(tags=['이력서를 수정합니다.'], request_body=ResumeSerializer)
+    def put(self, request, user_id, resume_id):
+        try:
+            user = SeniorUser.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            target_resume = Resume.objects.get(id=resume_id, user=user)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ResumeSerializer(target_resume, data=request.data)
+        if serializer.is_valid():
+            target_resume.is_submitted = False
+            target_resume = serializer.update(target_resume, validated_data=request.data)
+            target_resume.save()
+            res = Response(
+                {
+                    "resume_id": resume_id,
+                    "resume": serializer.data,
+                    "message": "이력서가 성공적으로 수정되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class GetResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['이력서 상세 내용을 조회합니다.'])
+    def get(self, request, user_id, resume_id):
+        try:
+            user = SeniorUser.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        try:
+            target_resume = Resume.objects.get(id=resume_id, user=user)
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ResumeSerializer(target_resume)
+        res = Response(
+            {
+                "resume_id": resume_id,
+                "resume": serializer.data,
+                "message": "이력서를 성공적으로 조회했습니다."
+            },
+            status=status.HTTP_200_OK,
+        )
+        return res
 
 class GetResumeListAPIView(APIView):
     permission_classes = [AllowAny]
