@@ -62,7 +62,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     portfolios = PortfolioSerializer(many=True)
     class Meta:
         model = Resume
-        fields = ['keyword', 'introduction', 'job_group', 'job_role', 'career_year', 'skills', 'careers', 'educations', 'projects', 'portfolios', 'duration_start', 'duration_end', 'min_month_pay', 'max_month_pay', 'commute_type']
+        fields = ['is_submitted', 'keyword', 'introduction', 'job_group', 'job_role', 'career_year', 'skills', 'careers', 'educations', 'projects', 'portfolios', 'duration_start', 'duration_end', 'min_month_pay', 'max_month_pay', 'commute_type']
 
     def update(self, resume, validated_data):
         resume.keyword = validated_data.pop('keyword')
