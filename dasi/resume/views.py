@@ -134,5 +134,34 @@ class SubmitResumeAPIView(APIView):
             return res
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class GetResumeListAPIView(APIView):
+    permission_classes = [AllowAny]
 
+    @swagger_auto_schema(tags=['사용자의 이력서 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        try:
+            user = SeniorUser.objects.get(user_id=user_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        resumes = [{
+            "resume_id": resume.id,
+            "is_default": resume.is_default,
+            "is_verified": resume.is_verified,
+            "career_year": resume.career_year,
+            "commute_type": resume.commute_type,
+            "title": resume.title,
+            "job_group": resume.job_group,
+            "job_role": resume.job_role,
+            "updated_at": resume.updated_at
+        } for resume in Resume.objects.filter(user=user)]
 
+        res = Response(
+            {
+                "user_id": user_id,
+                "resumes": resumes,
+                "message": "이력서 목록을 성공적으로 조회했습니다."
+            },
+            status=status.HTTP_200_OK,
+        )
+        return res
