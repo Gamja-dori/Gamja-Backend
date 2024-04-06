@@ -98,7 +98,7 @@ def get_final_score(ratio, scores):
 
 
 # 업무 한 줄 소개와 ncs 결과 추출 
-def search(project_overview, job_group, job_role, required_skills, required_pay, required_career, commute_type): # (project_overview, 직군/직무)
+def search(project_overview, job_group, job_role, required_skills, required_pay, required_career, commute_type):
     RATIO = (60, 20, 45, 25, 10) # 검색어, ncs, 스킬, 급여, 경력 반영비
 
     # 직무 -> 직군 -> 전체 순으로 검색
@@ -111,6 +111,7 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
                 resumes = Resume.objects.filter(is_submitted=True, commute_type=commute_type, job_group=job_group)
         except KeyError:
             resumes = Resume.objects.filter(is_submitted=True, commute_type=commute_type)
+    resumes = Resume.objects.all()
     
     final_scores = [0] * len(resumes)
 
@@ -123,11 +124,11 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
         scores = [0] * 5        # 점수
         recommend_comments = [] # 코멘트
 
-        scores[0] = search_result[i][1]
-        scores[1] = ncs_result[i][1]
+        scores[0] = search_result[i]
+        scores[1] = ncs_result
 
         # 스킬
-        required_skills = set(required_skills.strip('[]').split(', ')) # [ , , , ,] -> set ()
+        required_skills = set(required_skills) # [ , , , ,] -> set ()
         user_skills = set(resumes[i].skills.strip('[]').split(', ')) 
         scores[2], common_skills = get_skills_score(required_skills, user_skills)
         if scores[2] > 0:
