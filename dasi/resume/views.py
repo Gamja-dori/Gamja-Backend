@@ -188,6 +188,82 @@ class GetResumeAPIView(APIView):
             return res
         return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
 
+class CreateResumeDetailAPIView(APIView):
+    permission_classes = [AllowAny] 
+
+    @swagger_auto_schema(tags=['이력서 상세 항목을 생성합니다.'])
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        resume_id = request.data.get('resume_id')
+        resume = checkResumeExistence(user_id, resume_id)
+        if resume:
+            detail_type = request.data.get('detail_type')
+            if detail_type == "career":
+                detail = Career.objects.create(resume=resume)
+            elif detail_type == "education":
+                detail = Education.objects.create(resume=resume)
+            elif detail_type == "project":
+                detail = Project.objects.create(resume=resume)
+            elif detail_type == "portfolio":
+                detail = Portfolio.objects.create(resume=resume)
+            elif detail_type == "performance":
+                try: 
+                    career_id = request.data.get('career_id')    
+                    career = Career.objects.get(id=career_id, resume=resume)
+                except ObjectDoesNotExist:
+                    return Response({"error": "Career not found"}, status=status.HTTP_404_NOT_FOUND)
+                detail = Performance.objects.create(career=career)
+            res = Response(
+                {
+                    "resume_id": resume_id,
+                    "detail_type": detail_type,
+                    "detail_id": detail.id,
+                    "message": "상세 항목이 성공적으로 생성되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class DeleteResumeDetailAPIView(APIView):
+    permission_classes = [AllowAny] 
+
+    @swagger_auto_schema(tags=['이력서 상세 항목을 삭제합니다.'])
+    def delete(self, request):
+        user_id = request.data.get('user_id')
+        resume_id = request.data.get('resume_id')
+        resume = checkResumeExistence(user_id, resume_id)
+        if resume:
+            detail_type = request.data.get('detail_type')
+            detail_id = request.data.get('detail_id')
+            try:
+                if detail_type == "career":
+                    detail = Career.objects.get(id=detail_id, resume=resume)
+                elif detail_type == "education":
+                    detail = Education.objects.get(id=detail_id, resume=resume)
+                elif detail_type == "project":
+                    detail = Project.objects.get(id=detail_id, resume=resume)
+                elif detail_type == "portfolio":
+                    detail = Portfolio.objects.get(id=detail_id, resume=resume)
+                elif detail_type == "performance":
+                    career_id = request.data.get('career_id')
+                    career = Career.objects.get(id=career_id, resume=resume)
+                    detail = Performance.objects.get(id=detail_id, career=career)
+            except ObjectDoesNotExist:
+                return Response({"error": "Detail not found"}, status=status.HTTP_404_NOT_FOUND)
+            detail.delete()
+            res = Response(
+                {
+                    "resume_id": resume_id,
+                    "detail_type": detail_type,
+                    "detail_id": detail_id,
+                    "message": "상세 항목이 성공적으로 삭제되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+
 class GetResumeListAPIView(APIView):
     permission_classes = [AllowAny]
 
