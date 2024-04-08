@@ -35,7 +35,7 @@ def calculate_cosine(a, b):
     similarity = np.dot(vector_a, vector_b.T).toarray()[0, 0]
 
     # 유사도 보정
-    similarity *= 3.5
+    similarity *= 4.5
 
     if similarity > 1:
       similarity = 0.99
@@ -51,11 +51,26 @@ def calculate_similarity(project_overview, resumes):
     similarity_scores = []
     for resume in resumes:
         # 이력서로부터 키워드 추출
-        text = resume.keyword + resume.introduction
-        # performance name + detail 
-        # project name + detail
+        text = resume.job_role + resume.keyword + resume.introduction
+
+        careers = Career.objects.filter(resume_id=resume.id)
+        for career in careers:
+            if Performance.objects.filter(career_id=career.id).exists():
+                performances = Performance.objects.filter(career_id=career.id)
+                for p in performances:
+                    text += ' ' + p.performance_name + ' ' + p.performance_detail
+
+        if Education.objects.filter(resume_id=resume.id).exists():
+            educations = Education.objects.filter(resume_id=resume.id)
+            for e in educations:
+                text += ' ' + e.education_name + ' ' + e.education_info
+
+        if Project.objects.filter(resume_id=resume.id).exists():
+            projects = Project.objects.filter(resume_id=resume.id)
+            for p in projects:
+                text += ' ' + p.project_name + ' ' + p.project_detail
+                
         resume_keywords = extract_keywords(text)
-        # 업무 한 줄 소개와 이력서 사이의 유사도 계산
         similarity = calculate_cosine(project_keywords, resume_keywords)
         similarity_scores.append(similarity)
 
@@ -63,16 +78,18 @@ def calculate_similarity(project_overview, resumes):
 
 
 def get_skills_score(required, user):
-  if len(required) == 0: # 조건 없음
-        return 0
-  else:
-        common = [required & user]
-        return round(len(common) / len(required), 2), common
+    common = required & user
+    if not required:
+        return -1, 0
+    elif not common: 
+        return 0, 0
+    else:
+        return round(len(common) / len(required), 2), list(common)
 
 
 def get_pay_score(required, user):
   if required == -1:     # 조건 없음
-        return 0
+        return -1
   elif user <= required: # 조건 만족
         return 1
   else:                  # 조건 불만족
@@ -81,7 +98,7 @@ def get_pay_score(required, user):
 
 def get_career_score(required, user):
   if required == -1:
-        return 0
+        return -1
   elif required < user:
         return 1
   else:
@@ -91,33 +108,38 @@ def get_career_score(required, user):
 def get_final_score(ratio, scores):
   total, divide = 0, 0
   for i in range(5):
-        if scores[i]:
+        if scores[i] != -1:
           total += scores[i] * ratio[i]
           divide += ratio[i]
-  return round((total / divide) * 100)
+  final_score = round((total / divide) * 100)
+  return final_score if final_score > 0 else 0
 
 
 # 업무 한 줄 소개와 ncs 결과 추출 
 def search(project_overview, job_group, job_role, required_skills, required_pay, required_career, commute_type):
     RATIO = (60, 20, 45, 25, 10) # 검색어, ncs, 스킬, 급여, 경력 반영비
 
-    # 직무 -> 직군 -> 전체 순으로 검색
-    try:
-        if Resume.objects.filter(is_submitted=True, commute_type=commute_type, job_role=job_role).exists():
-            resumes = Resume.objects.filter(is_submitted=True, commute_type=commute_type, job_role=job_role)
-    except KeyError: 
-        try:
-            if Resume.objects.filter(is_submitted=True, commute_type=commute_type, job_group=job_group).exists():
-                resumes = Resume.objects.filter(is_submitted=True, commute_type=commute_type, job_group=job_group)
-        except KeyError:
-            resumes = Resume.objects.filter(is_submitted=True, commute_type=commute_type)
-    resumes = Resume.objects.all()
+    # 직군 -> 전체 순으로 검색        
+    if Resume.objects.filter(is_submitted=True, job_group=job_group).exists():
+        resumes = Resume.objects.filter(is_submitted=True, job_group= job_group)
+    else:
+        resumes = Resume.objects.filter(is_submitted=True)
+        
+    # 근무 형태 필터링
+    if commute_type != '상주 근무 및 원격 근무':
+        if resumes.filter(commute_type__icontains=commute_type).exists():
+            resumes = resumes.filter(commute_type__icontains=commute_type)
     
     final_scores = [0] * len(resumes)
 
     # 모든 이력서에 대해 검색어 & ncs 점수 한 번에 계산
     search_result = calculate_similarity(project_overview, resumes)
     ncs_result = 1
+
+    if required_skills == "[]":
+        required_skills = set()
+    else:
+        required_skills = set(str(required_skills).strip('[]').split(', '))
 
     # 이력서마다 스킬, 급여, 경력 점수 계산
     for i in range(len(resumes)):
@@ -128,7 +150,6 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
         scores[1] = ncs_result
 
         # 스킬
-        required_skills = set(required_skills) # [ , , , ,] -> set ()
         user_skills = set(resumes[i].skills.strip('[]').split(', ')) 
         scores[2], common_skills = get_skills_score(required_skills, user_skills)
         if scores[2] > 0:

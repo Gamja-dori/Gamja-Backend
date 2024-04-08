@@ -68,7 +68,8 @@ class FilterResultCreateView(APIView):
         job_role = data.get("job_role")
         min_career_year = data.get("min_career_year")
         max_career_year = data.get("max_career_year")
-        skills = set(data.get("skills"))
+        skills = data.get("skills")
+        skills = list(skills.strip('[]').split(', '))
         max_month_pay = data.get("max_month_pay")
         commute_type = data.get("commute_type")
         
