@@ -1,4 +1,5 @@
 from .models import *
+from .serializers import *
 from resume.models import Resume
 from users.models import SeniorUser
 from .recommendation import search
@@ -12,7 +13,7 @@ class SearchResultCreateView(APIView):
     permission_classes = [AllowAny] 
         
     def create_search_result(self, data):
-        user_id = data.get("user_id")
+        user_id = int(data.get("user"))
         query = data.get("query")
         job_group = data.get("job_group")
         job_role = data.get("job_role")
@@ -53,7 +54,7 @@ class SearchResultCreateView(APIView):
         )
         
     
-    #@swagger_auto_schema(tags=['시니어 사용자 데이터를 생성합니다.'], request_body=SeniorSerializer)
+    @swagger_auto_schema(tags=['인재 추천 검색 결과를 생성합니다.'], request_body=SearchSerializer)
     def post(self, request):
         # 검색 결과 객체 생성
         response = self.create_search_result(data=request.data)
