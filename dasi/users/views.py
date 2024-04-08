@@ -32,22 +32,13 @@ def create_user(data, user_type):
         # 토큰 생성
         token_serializer = TokenObtainPairSerializer(data={'username': member.user.username, 'password': password})
         if token_serializer.is_valid():
-            access_token = str(token_serializer.validated_data['access'])
-            refresh_token = str(token_serializer.validated_data['refresh'])
-
             res = Response(
                 {
                     "username": member.user.username,
                     "message": "회원가입이 완료되었습니다.",
-                    "token": {
-                        "access": access_token,
-                        "refresh": refresh_token,
-                    },
                 },
                 status=status.HTTP_201_CREATED,
             )
-            res.set_cookie("access", access_token, httponly=True)
-            res.set_cookie("refresh", refresh_token, httponly=True)
             return res
         return Response(token_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

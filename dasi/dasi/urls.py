@@ -31,5 +31,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('users.urls')),
     path('resumes/', include('resume.urls')),
+    path('recommends/', include('recommend.urls')),
     path('health/', health_check),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

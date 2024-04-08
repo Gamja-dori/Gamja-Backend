@@ -2,7 +2,6 @@ from django.db import models
 from resume.models import Resume
 from django.contrib.auth.models import AbstractUser, BaseUserManager
     
-    
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=10, unique=True)
