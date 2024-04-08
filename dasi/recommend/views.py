@@ -97,7 +97,7 @@ class FilterResultCreateView(APIView):
         return resumes.values_list('id', flat=True)
     
     
-    #@swagger_auto_schema(tags=['시니어 사용자 데이터를 생성합니다.'], request_body=SeniorSerializer)
+    @swagger_auto_schema(tags=['인재 필터링 결과를 반환합니다.'], request_body=FilterSerializer)
     def post(self, request):
         filtered_result = self.filter_resumes(request.data)
         
@@ -114,7 +114,7 @@ class FilterResultCreateView(APIView):
                 "is_verified": resume.is_verified,
                 "career_year": resume.career_year,
                 "commute_type": resume.commute_type,
-                "profile_image": senior_user.profile_image,
+                #"profile_image": senior_user.profile_image,
                 "job_group": resume.job_group,
                 "job_role": resume.job_role,
                 "keyword": resume.keyword,
