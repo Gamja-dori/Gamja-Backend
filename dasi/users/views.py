@@ -11,14 +11,20 @@ import re
 from drf_yasg.utils import swagger_auto_schema
 
 def validate_password(pw):
-    regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,25}'
+    regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,12}'
     if not re.match(regex_pw, pw):
         raise ValidationError("8자 이상의 영문 대/소문자, 숫자, 특수문자 조합을 입력해주세요.")
-    if not re.search(r"[a-zA-Z]", pw):
-        raise ValidationError("비밀번호는 하나 이상의 영문이 포함되어야 합니다.")
-    if not re.search(r"\d", pw):
-        raise ValidationError("비밀번호는 하나 이상의 숫자가 포함되어야 합니다.")
-
+    
+    combinations_cnt = 0 # 영문, 숫자, 특수기호 중 2종류 포함했는지 체크
+    if re.search(r"[a-zA-Z]", pw):
+        combinations_cnt += 1
+    if re.search(r"\d", pw):
+        combinations_cnt += 1
+    if re.search(r"[!@##$%^&+=]", pw):
+        combinations_cnt += 1
+    if combinations_cnt < 2:
+        raise ValidationError("비밀번호는 영문, 숫자, 특수기호 중 2종류 이상 조합되어야 합니다.")
+    
 
 def create_user(data, user_type):
     if user_type == 1:
@@ -153,3 +159,15 @@ class UserProfileView(APIView):
             response_data['is_certified'] = member.is_certified   
         
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class CheckDuplicateView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['중복된 아이디 여부를 조회합니다.'])
+    def get(self, request, username):
+        try:
+            User.objects.get(username=username)
+            return Response({True}, status=status.HTTP_200_OK)
+        except ObjectDoesNotExist:
+            return Response({False}, status=status.HTTP_200_OK)
