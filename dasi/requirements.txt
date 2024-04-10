@@ -26,6 +26,7 @@ mysqlclient==2.2.4
 nltk==3.8.1
 numpy==1.26.4
 oauthlib==3.2.2
+openai==1.16.2
 packaging==24.0
 pillow==10.2.0
 pycparser==2.21
