@@ -19,8 +19,8 @@ SECRET_KEY = env('SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "dasi-expert.com"]
-
+#ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "dasi-expert.com"]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -88,10 +88,12 @@ MIDDLEWARE = [
 
 # CORS Settings
 CORS_ORIGIN_WHITELIST = ( # 허용할 도메인 
-    'http://localhost:3000',                 
-    'https://dasi-expert.com'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://dasi-expert.com',
+    'https://www.dasi-expert.com'
 )
-
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = (
 "GET",
 "POST",
