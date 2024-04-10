@@ -103,9 +103,11 @@ class SetDefaultResumeAPIView(APIView):
         if resume:
             serializer = FindResumeSerializer(resume, data=request.data, partial=True)
             if serializer.is_valid():
-                prior_default_resume = Resume.objects.get(is_default=True)
-                prior_default_resume.is_default = False
-                prior_default_resume.save()
+                prior_default_resume = Resume.objects.filter(is_default=True)
+                if len(prior_default_resume) > 0:
+                    for p in prior_default_resume:
+                        p.is_default = False
+                        p.save()
                 resume.is_default = True
                 serializer.save()
                 res = Response(
