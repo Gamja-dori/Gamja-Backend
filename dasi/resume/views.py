@@ -1,5 +1,5 @@
 from .models import *
-from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer
+from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -103,9 +103,11 @@ class SetDefaultResumeAPIView(APIView):
         if resume:
             serializer = FindResumeSerializer(resume, data=request.data, partial=True)
             if serializer.is_valid():
-                prior_default_resume = Resume.objects.get(is_default=True)
-                prior_default_resume.is_default = False
-                prior_default_resume.save()
+                prior_default_resume = Resume.objects.filter(is_default=True)
+                if len(prior_default_resume) > 0:
+                    for p in prior_default_resume:
+                        p.is_default = False
+                        p.save()
                 resume.is_default = True
                 serializer.save()
                 res = Response(
@@ -293,3 +295,30 @@ class GetResumeListAPIView(APIView):
             )
             return res
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+class ExtractPriorResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['기존 이력서에서 정보를 추출합니다.'], request_body=PriorResumeSerializer)
+    def post(self, request, user_id, resume_id):
+        resume = checkResumeExistence(user_id, resume_id)
+        if resume:
+            serializer = PriorResumeSerializer(data=request.data)
+            if serializer.is_valid():
+                careers, educations = serializer.create(validated_data=request.data, resume=resume)
+                career_serializer = CareerSerializer(careers, many=True)
+                education_serializer = EducationSerializer(educations, many=True)
+                res = Response(
+                    {
+                        "user_id": user_id,
+                        "resume_id": resume.id,
+                        "careers": career_serializer.data,
+                        "educations": education_serializer.data,
+                        "message": "이력서 정보가 성공적으로 추출되었습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+            

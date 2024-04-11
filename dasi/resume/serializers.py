@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from users.models import SeniorUser
+from .resume_ocr import *
 
 class CreateResumeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,3 +128,42 @@ class ResumeSerializer(serializers.ModelSerializer):
             })
         
         return resume
+
+def formattingDate(duration):
+    start, end = duration.split('-')
+    if not end:
+        end = '현재'   
+    return (start, end)
+
+class PriorResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriorResume
+        fields = ['prior_resume_name', 'prior_resume_file']
+    
+    def create(self, validated_data, resume):
+        ocr_result = resume_ocr(validated_data.get('prior_resume_file'), validated_data.get('prior_resume_name'))
+        mask_result = mask_personal_info(ocr_result)
+        formatting_result = formatting_career(mask_result)
+        # 경력사항 객체 생성 
+        careers = []
+        for career in formatting_result['careers']:
+            start, end = formattingDate(career['duration'])
+            careers.append(Career.objects.create(
+                start_year_month=start, 
+                end_year_month=end,
+                company_name=career['company_name'],
+                job_name=career['job_name'],
+                resume=resume
+            ))
+        # 학력 객체 생성
+        educations = []
+        for education in formatting_result['educations']:
+            start, end = formattingDate(education['duration'])
+            educations.append(Education.objects.create(
+                start_year_month=start, 
+                end_year_month=end,
+                education_name=education['education_name'],
+                education_info=education['education_info'],
+                resume=resume
+            ))
+        return [careers, educations]
