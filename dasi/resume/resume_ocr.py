@@ -109,7 +109,7 @@ def formatting_career(text):
     OpenAI.api_key = env('GPT_SECRET_KEY')
     client = OpenAI(api_key=env('GPT_SECRET_KEY'))
 
-    command = '경력사항(careers)과 학력사항(educations)만 추출해줘. careers는 duration, company_name, job_name에 대한 정보를 JSON 형식으로 추출해줘. educations는 duration, education_name, education_info에 대한 정보를 JSON 형식으로 추출해줘. duration은 duration: yyyy.MM-yyyy.MM 형식이야. 만약 없다면 빈 JSON으로 반환해줘'
+    command = '경력사항(careers)과 학력사항(educations)만 추출해줘. careers는 duration, company_name, job_name에 대한 정보를 JSON 형식으로 추출해줘. educations는 duration, education_name, education_info에 대한 정보를 JSON 형식으로 추출해줘. duration은 duration: yyyy.MM-yyyy.MM 형식이야. yyyy년-yyyy년으로 입력이 들어온다면 yyyy.03-yyyy.02으로 만들어줘. 만약 없다면 빈 JSON으로 반환해줘'
 
     completion = client.completions.create(
         model="gpt-3.5-turbo-instruct",
