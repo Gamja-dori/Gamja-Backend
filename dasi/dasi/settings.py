@@ -5,9 +5,7 @@ from pathlib import Path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(DEBUG=(bool, True))
-environ.Env.read_env(
-    env_file=os.path.join(BASE_DIR, '.env')
-)
+environ.Env.read_env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -19,7 +17,6 @@ SECRET_KEY = env('SECRET_KEY')
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 DEBUG = True
-#ALLOWED_HOSTS = ['127.0.0.1', env('EC2_PUBLIC_ADDR'), "dasi-expert.com"]
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -54,6 +51,7 @@ INSTALLED_APPS = [
     # CORS
     'corsheaders',
 ]
+
 REST_AUTH_TOKEN_MODEL = None
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
@@ -102,7 +100,6 @@ CORS_ALLOW_METHODS = (
 "PATCH",
 "PUT",
 )
-
 CORS_ALLOW_HEADERS = (
 "accept",
 "authorization",
@@ -131,7 +128,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'dasi.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -191,6 +187,10 @@ USE_TZ=False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static") 
+
+# Media files (FileField, ImageField로 사용자가 웹에서 업로드하는 정적 파일)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media") 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
