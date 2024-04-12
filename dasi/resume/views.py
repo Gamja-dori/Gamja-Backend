@@ -156,7 +156,6 @@ class EditResumeAPIView(APIView):
         if resume:
             serializer = ResumeSerializer(resume, data=request.data)
             if serializer.is_valid():
-                resume.is_submitted = False
                 resume = serializer.update(resume, validated_data=request.data)
                 resume.save()
                 res = Response(
