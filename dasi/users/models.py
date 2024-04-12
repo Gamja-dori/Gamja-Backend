@@ -4,10 +4,11 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
     
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=10, unique=True)
+    username = models.CharField(max_length=12, unique=True)
     email = models.EmailField(null=True, blank=True)
     is_senior = models.BooleanField(default=False)
     is_enterprise = models.BooleanField(default=False)
+    profile_image = models.ImageField(upload_to='uploads/profile/', blank=True, default='uploads/profile/default_profile.png')
     
     class Meta: # 테이블 이름 지정
         db_table = 'users'
@@ -18,9 +19,8 @@ class SeniorUser(models.Model):
     name = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=20)
     default_resume = models.ForeignKey(Resume, null=True, blank=True, on_delete=models.SET_NULL)
-    profile_image = models.ImageField(upload_to='uploads/profile/senior', null=True, blank=True)
 
-    class Meta: # 테이블 이름 지정
+    class Meta: 
         db_table = 'senior_users'
         
     
@@ -30,9 +30,8 @@ class EnterpriseUser(models.Model):
     phone_number = models.CharField(max_length=20)
     business_number = models.CharField(max_length=20)
     is_certified = models.BooleanField(default=False) # 사업자번호 인증 여부
-    profile_image = models.ImageField(upload_to='uploads/profile/enterprise', null=True, blank=True)
 
-    class Meta: # 테이블 이름 지정
+    class Meta: 
         db_table = 'enterprise_users'
 
 

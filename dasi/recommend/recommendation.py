@@ -7,7 +7,6 @@ import pickle
 import nltk
 
 hannanum = Hannanum()
-nltk.download("punkt")
 
 def extract_keywords(text):
     # 텍스트에서 키워드 추출

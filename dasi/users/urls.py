@@ -10,6 +10,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('<int:id>/', UserProfileView.as_view(), name='profile'),
     path('enterprise/<int:id>/', UserProfileView.as_view(), name='enterprise_profile'),
+    path('profile/<int:id>/', ProfileImageView.as_view(), name='change_profile_image'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('check/<str:username>/', CheckDuplicateView.as_view(), name='check_duplicate'),

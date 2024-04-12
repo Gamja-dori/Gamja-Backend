@@ -1,14 +1,17 @@
-from django.shortcuts import render
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.core.files.storage import default_storage 
+from django.core.files.base import ContentFile
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
 from .serializers import *
 from .models import *
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import base64
+import json
 import re
-from drf_yasg.utils import swagger_auto_schema
 
 def validate_password(pw):
     regex_pw = '[A-Za-z0-9!@##$%^&+=]{8,12}'
@@ -159,6 +162,58 @@ class UserProfileView(APIView):
             response_data['is_certified'] = member.is_certified   
         
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class ProfileImageView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['사용자의 프로필 사진을 조회합니다.'])
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            image_file = user.profile_image
+            with open(image_file.path, "rb") as f: # 바이너리 읽기 모드로 열기
+                image_data = f.read()
+            
+            # 이미지를 base64로 인코딩
+            image_base64 = base64.b64encode(image_data)
+            res = {
+                "message": "회원 프로필 사진을 성공적으로 조회했습니다.",
+                "image": image_base64
+            }
+            return Response(res, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+    @swagger_auto_schema(tags=['사용자의 프로필 사진을 변경합니다.'])
+    def post(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            image = request.FILES["image"]
+            if ('uploads/profile/' + user.username + '/') in user.profile_image.name:
+                default_storage.delete(user.profile_image.name) # 기존 이미지 삭제
+            image_path = default_storage.save('uploads/profile/' + user.username + '/' + image.name, ContentFile(image.read()))
+            
+            user.profile_image = image_path
+            user.save()
+
+            return Response(
+                {
+                    "message": "회원 프로필 사진이 성공적으로 변경되었습니다."
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 
 class CheckDuplicateView(APIView):
