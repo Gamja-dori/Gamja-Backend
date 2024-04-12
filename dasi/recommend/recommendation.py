@@ -5,18 +5,22 @@ from resume.models import *
 import numpy as np
 import pickle
 import nltk
+import re
 
 hannanum = Hannanum()
 
 def extract_keywords(text):
-    # 텍스트에서 키워드 추출
+    # 한글 키워드 추출
     keywords = hannanum.nouns(text)
-    eng_lower = text.lower()
+    
+    # 영문 키워드 추출
+    eng_str = re.sub(r"[^a-zA-Z\s]", "", text) # 영문자 + 공백만 남기기
+    eng_lower = eng_str.lower()
     eng_keywords = nltk.word_tokenize(eng_lower)
     return " ".join(keywords + eng_keywords)  # 단어 리스트를 다시 문자열로 변환하여 반환
 
 
-def calculate_cosine(a, b):
+def calculate(a, b):
     # 직무와 직접적으로 관련 없는 stop words
     general_stopwords = ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
                          '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
@@ -34,7 +38,7 @@ def calculate_cosine(a, b):
     similarity = np.dot(vector_a, vector_b.T).toarray()[0, 0]
 
     # 유사도 보정
-    similarity *= 4.5
+    similarity *= 4
 
     if similarity > 1:
       similarity = 0.99
@@ -50,7 +54,7 @@ def calculate_similarity(project_overview, resumes):
     similarity_scores = []
     for resume in resumes:
         # 이력서로부터 키워드 추출
-        text = resume.job_role + resume.keyword + resume.introduction
+        text = resume.job_role + ' ' + resume.keyword + ' ' + resume.introduction
 
         careers = Career.objects.filter(resume_id=resume.id)
         for career in careers:
@@ -68,57 +72,62 @@ def calculate_similarity(project_overview, resumes):
             projects = Project.objects.filter(resume_id=resume.id)
             for p in projects:
                 text += ' ' + p.project_name + ' ' + p.project_detail
-                
+
         resume_keywords = extract_keywords(text)
-        similarity = calculate_cosine(project_keywords, resume_keywords)
+        similarity = calculate(project_keywords, resume_keywords)
         similarity_scores.append(similarity)
 
     return similarity_scores
 
 
 def get_skills_score(required, user):
-    common = required & user
-    if not required:
+    common = []
+    for skill in required:
+        if skill.lower() in user:
+            common.append(skill)
+    
+    if not required:     # 조건 없음
         return -1, 0
-    elif not common: 
+    elif not common:     # 조건 불만족
         return 0, 0
-    else:
-        return round(len(common) / len(required), 2), list(common)
+    else:                # 조건 만족
+        return round(len(common) / len(required), 2), common
 
 
 def get_pay_score(required, user):
-  if required == -1:     # 조건 없음
+    if required == -1:
         return -1
-  elif user <= required: # 조건 만족
+    elif user <= required:
         return 1
-  else:                  # 조건 불만족
+    else:                 
         return 1 - (user - required) / 1000
 
 
 def get_career_score(required, user):
-  if required == -1:
+    if required == -1:
         return -1
-  elif required < user:
+    elif required < user:
         return 1
-  else:
+    else:
         return 1 - (required - user) / 50
 
 
 def get_final_score(ratio, scores):
-  total, divide = 0, 0
-  for i in range(5):
+    total, divide = 0, 0
+    for i in range(5):
         if scores[i] != -1:
-          total += scores[i] * ratio[i]
-          divide += ratio[i]
-  final_score = round((total / divide) * 100)
-  return final_score if final_score > 0 else 0
+            total += int(scores[i] * ratio[i]) 
+            divide += ratio[i]
+            
+    final_score = round((total / divide) * 100)
+    return final_score if final_score > 0 else 0
 
 
 # 업무 한 줄 소개와 ncs 결과 추출 
 def search(project_overview, job_group, job_role, required_skills, required_pay, required_career, commute_type):
     RATIO = (60, 20, 45, 25, 10) # 검색어, ncs, 스킬, 급여, 경력 반영비
 
-    # 직군 -> 전체 순으로 검색        
+    # 해당 직군 -> 전체 직군 순으로 이력서 목록 검색        
     if Resume.objects.filter(is_submitted=True, job_group=job_group).exists():
         resumes = Resume.objects.filter(is_submitted=True, job_group= job_group)
     else:
@@ -138,7 +147,7 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
     if required_skills == "[]":
         required_skills = set()
     else:
-        required_skills = set(str(required_skills).strip('[]').split(', '))
+        required_skills = set(str(required_skills).strip('[]').split(', ')) 
 
     # 이력서마다 스킬, 급여, 경력 점수 계산
     for i in range(len(resumes)):
@@ -149,7 +158,7 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
         scores[1] = ncs_result
 
         # 스킬
-        user_skills = set(resumes[i].skills.strip('[]').split(', ')) 
+        user_skills = set(resumes[i].skills.lower().strip('[]').split(', ')) 
         scores[2], common_skills = get_skills_score(required_skills, user_skills)
         if scores[2] > 0:
             recommend_comments.append({"commentType": 2, "comments": [str(skill) for skill in common_skills[:3]]})
