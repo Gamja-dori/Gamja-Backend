@@ -9,9 +9,7 @@ import environ, os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(DEBUG=(bool, True))
-environ.Env.read_env(
-    env_file=os.path.join(BASE_DIR, '.env')
-)
+environ.Env.read_env()
 
 # naver ocr
 def resume_ocr(image_file, image_file_name):
