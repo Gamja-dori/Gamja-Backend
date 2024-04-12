@@ -1,14 +1,59 @@
 from .models import *
 from .serializers import *
 from resume.models import Resume
-from users.models import SeniorUser
+from users.models import User
 from .recommendation import search
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
+import base64
 
+def encode_base64(image_file):
+    with open(image_file.path, "rb") as f: # 바이너리 읽기 모드로 열기
+        image_data = f.read()
+    return base64.b64encode(image_data)    
+
+
+class MainView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['지금 떠오르는 인재 목록을 조회합니다.'])
+    def get(self, request):
+        response_data = {
+            "resumes": []
+        }
+        
+        resumes = Resume.objects.filter(is_submitted=True).order_by('view')
+        LIMIT = 3
+        cnt = 0
+        
+        for resume in resumes: 
+            cnt += 1
+            if cnt > LIMIT:
+                break
+            
+            user = User.objects.filter(id=resume.user_id).first()
+            response_data["resumes"].append({
+                "resume_id": resume.id,
+                "is_verified": resume.is_verified,
+                "keyword": resume.keyword,
+                "job_group": resume.job_group,
+                "job_role": resume.job_role,
+                "career_year": resume.career_year,
+                "skills": resume.skills, 
+                "commute_type": resume.commute_type,
+                "profile_image": encode_base64(user.profile_image),
+            })
+        
+        return Response(
+            data = response_data,
+            status=status.HTTP_200_OK,
+        )
+    
+    
+    
 class SearchResultCreateView(APIView):
     permission_classes = [AllowAny] 
         
@@ -26,26 +71,25 @@ class SearchResultCreateView(APIView):
         search_result = search(query, job_group, job_role, skills, max_month_pay, min_career_year, commute_type)
         
         response_data = {
-            "query": query,
             "resumes": []
         }
         
         for score, resume_id, comments in search_result:
             resume = Resume.objects.get(id=resume_id)
-            senior_user = SeniorUser.objects.get(user_id=resume.user_id)
+            user = User.objects.get(id=resume.user_id)
             
             response_data["resumes"].append({
-                "resume_id": resume_id,
+                "resume_id": resume.id,
                 "is_verified": resume.is_verified,
-                "career_year": resume.career_year,
-                "commute_type": resume.commute_type,
-                # "profile_image": senior_user.profile_image,
+                "keyword": resume.keyword,
                 "job_group": resume.job_group,
                 "job_role": resume.job_role,
-                "keyword": resume.keyword,
-                "skills": resume.skills,    
+                "career_year": resume.career_year,
+                "skills": resume.skills, 
+                "commute_type": resume.commute_type,
                 "score": score,
-                "comments": comments
+                "comments": comments,
+                "profile_image": encode_base64(user.profile_image),
             })
         
         return Response(
@@ -53,10 +97,8 @@ class SearchResultCreateView(APIView):
             status=status.HTTP_200_OK,
         )
         
-    
     @swagger_auto_schema(tags=['인재 추천 검색 결과를 생성합니다.'], request_body=SearchSerializer)
     def post(self, request):
-        # 검색 결과 객체 생성
         response = self.create_search_result(data=request.data)
         return response  
 
@@ -96,7 +138,6 @@ class FilterResultCreateView(APIView):
         
         return resumes.values_list('id', flat=True)
     
-    
     @swagger_auto_schema(tags=['인재 필터링 결과를 반환합니다.'], request_body=FilterSerializer)
     def post(self, request):
         filtered_result = self.filter_resumes(request.data)
@@ -106,19 +147,19 @@ class FilterResultCreateView(APIView):
         }
         
         resumes = Resume.objects.filter(id__in=filtered_result)
-        senior_users = SeniorUser.objects.filter(user_id__in=resumes.values_list('user_id', flat=True))
+        users = User.objects.filter(id__in=resumes.values_list('user_id', flat=True))
         
-        for resume, senior_user in zip(resumes, senior_users):            
+        for resume, user in zip(resumes, users): 
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
-                "career_year": resume.career_year,
-                "commute_type": resume.commute_type,
-                #"profile_image": senior_user.profile_image,
+                "keyword": resume.keyword,
                 "job_group": resume.job_group,
                 "job_role": resume.job_role,
-                "keyword": resume.keyword,
-                "skills": resume.skills,    
+                "career_year": resume.career_year,
+                "skills": resume.skills, 
+                "commute_type": resume.commute_type,
+                "profile_image": encode_base64(user.profile_image),
             })
         
         return Response(
