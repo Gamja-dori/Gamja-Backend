@@ -1,6 +1,8 @@
 from .models import *
 from .serializers import *
 from resume.models import Resume
+from resume.views import checkResumeExistence
+from resume.serializers import ResumeSerializer
 from users.models import User
 from .recommendation import search
 from rest_framework import status
@@ -58,7 +60,7 @@ class SearchResultCreateView(APIView):
     permission_classes = [AllowAny] 
         
     def create_search_result(self, data):
-        user_id = int(data.get("user"))
+        user_id = int(data.get("user_id"))
         query = data.get("query")
         job_group = data.get("job_group")
         job_role = data.get("job_role")
@@ -166,3 +168,27 @@ class FilterResultCreateView(APIView):
             data = response_data,
             status=status.HTTP_200_OK,
         )
+        
+
+class ResumeDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['기업 사용자가 시니어 전문가의 이력서 상세 내용을 조회합니다.'])
+    def get(self, request, user_id, resume_id):
+        resume = checkResumeExistence(user_id, resume_id)
+        
+        if resume:
+            serializer = ResumeSerializer(resume)
+            resume.view += 1
+            resume.save()
+            res = Response(
+                {
+                    "view": resume.view, 
+                    "resume_id": resume_id,
+                    "message": "이력서를 성공적으로 조회했습니다.",
+                    "resume": serializer.data
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
