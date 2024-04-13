@@ -1,5 +1,5 @@
 from .models import *
-from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer
+from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer, ResumeCardSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -272,22 +272,11 @@ class GetResumeListAPIView(APIView):
     def get(self, request, user_id):
         user = checkUserExistence(user_id)
         if user:
-            resumes = [{
-                "resume_id": resume.id,
-                "is_default": resume.is_default,
-                "is_verified": resume.is_verified,
-                "career_year": resume.career_year,
-                "commute_type": resume.commute_type,
-                "title": resume.title,
-                "job_group": resume.job_group,
-                "job_role": resume.job_role,
-                "updated_at": resume.updated_at
-            } for resume in Resume.objects.filter(user=user)]
-
+            resumes = ResumeCardSerializer(Resume.objects.filter(user=user), many=True)
             res = Response(
                 {
                     "user_id": user_id,
-                    "resumes": resumes,
+                    "resumes": resumes.data,
                     "message": "이력서 목록을 성공적으로 조회했습니다."
                 },
                 status=status.HTTP_200_OK,
@@ -321,3 +310,30 @@ class ExtractPriorResumeAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
             
+class GetDefaultResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['기본 이력서 정보를 조회합니다.'])
+    def get(self, request, user_id):
+        user = checkUserExistence(user_id)
+        if user: 
+            default_resume = Resume.objects.filter(user=user, is_default=True)
+            if not default_resume:
+                res = Response(
+                    {
+                        "message": "등록된 기본 이력서가 없습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                serializer = ResumeCardSerializer(default_resume[0])
+                res = Response(
+                        {
+                            "user_id": user_id,
+                            "resume": serializer.data,
+                            "message": "기본 이력서 정보가 성공적으로 조회되었습니다."
+                        },
+                        status=status.HTTP_200_OK,
+                    )
+            return res
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
