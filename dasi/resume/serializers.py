@@ -172,4 +172,4 @@ class PriorResumeSerializer(serializers.ModelSerializer):
 class ResumeCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
-        fields = ['id', 'is_default', 'is_verified', 'career_year', 'commute_type', 'title', 'job_group', 'updated_at']
+        fields = ['id', 'is_default', 'is_verified', 'career_year', 'commute_type', 'title', 'job_group', 'job_role', 'updated_at']
