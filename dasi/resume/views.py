@@ -321,6 +321,8 @@ class GetDefaultResumeAPIView(APIView):
             if not default_resume:
                 res = Response(
                     {
+                        "user_id": user_id,
+                        "resume": {},
                         "message": "등록된 기본 이력서가 없습니다."
                     },
                     status=status.HTTP_200_OK,
@@ -328,12 +330,12 @@ class GetDefaultResumeAPIView(APIView):
             else:
                 serializer = ResumeCardSerializer(default_resume[0])
                 res = Response(
-                        {
-                            "user_id": user_id,
-                            "resume": serializer.data,
-                            "message": "기본 이력서 정보가 성공적으로 조회되었습니다."
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    {
+                        "user_id": user_id,
+                        "resume": serializer.data,
+                        "message": "기본 이력서 정보가 성공적으로 조회되었습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
             return res
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
