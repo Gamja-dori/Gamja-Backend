@@ -54,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class PortfolioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Portfolio
-        fields = ['id', 'portfolio_name'] #'portfolio_file'
+        fields = ['id', 'portfolio_name', 'portfolio_file']
     
 class ResumeSerializer(serializers.ModelSerializer):
     careers = CareerSerializer(many=True)
@@ -124,7 +124,7 @@ class ResumeSerializer(serializers.ModelSerializer):
         for portfolio in portfolios:
             Portfolio.objects.update_or_create(id=portfolio['id'], defaults={
                 'portfolio_name': portfolio['portfolio_name'],
-                #'portfolio_file': portfolio['portfolio_file'],
+                'portfolio_file': portfolio['portfolio_file'],
                 'resume': resume
             })
         
