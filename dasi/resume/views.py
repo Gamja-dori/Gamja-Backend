@@ -1,5 +1,5 @@
 from .models import *
-from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer, ResumeCardSerializer
+from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer, ProjectSerializer, PortfolioSerializer, PerformanceSerializer, ResumeCardSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -199,26 +199,31 @@ class CreateResumeDetailAPIView(APIView):
         resume = checkResumeExistence(user_id, resume_id)
         if resume:
             detail_type = request.data.get('detail_type')
-            if detail_type == "career":
+            if detail_type == "careers":
                 detail = Career.objects.create(resume=resume)
-            elif detail_type == "education":
+                detail_serializer = CareerSerializer(detail)
+            elif detail_type == "educations":
                 detail = Education.objects.create(resume=resume)
-            elif detail_type == "project":
+                detail_serializer = EducationSerializer(detail)
+            elif detail_type == "projects":
                 detail = Project.objects.create(resume=resume)
-            elif detail_type == "portfolio":
+                detail_serializer = ProjectSerializer(detail)
+            elif detail_type == "portfolios":
                 detail = Portfolio.objects.create(resume=resume)
-            elif detail_type == "performance":
+                detail_serializer = PortfolioSerializer(detail)
+            elif detail_type == "performances":
                 try: 
                     career_id = request.data.get('career_id')    
                     career = Career.objects.get(id=career_id, resume=resume)
                 except ObjectDoesNotExist:
                     return Response({"error": "Career not found"}, status=status.HTTP_404_NOT_FOUND)
                 detail = Performance.objects.create(career=career)
+                detail_serializer = PerformanceSerializer(detail)
             res = Response(
                 {
                     "resume_id": resume_id,
                     "detail_type": detail_type,
-                    "detail_id": detail.id,
+                    "detail": detail_serializer.data,
                     "message": "상세 항목이 성공적으로 생성되었습니다."
                 },
                 status=status.HTTP_200_OK,
@@ -238,15 +243,15 @@ class DeleteResumeDetailAPIView(APIView):
             detail_type = request.data.get('detail_type')
             detail_id = request.data.get('detail_id')
             try:
-                if detail_type == "career":
+                if detail_type == "careers":
                     detail = Career.objects.get(id=detail_id, resume=resume)
-                elif detail_type == "education":
+                elif detail_type == "educations":
                     detail = Education.objects.get(id=detail_id, resume=resume)
-                elif detail_type == "project":
+                elif detail_type == "projects":
                     detail = Project.objects.get(id=detail_id, resume=resume)
-                elif detail_type == "portfolio":
+                elif detail_type == "portfolios":
                     detail = Portfolio.objects.get(id=detail_id, resume=resume)
-                elif detail_type == "performance":
+                elif detail_type == "performances":
                     career_id = request.data.get('career_id')
                     career = Career.objects.get(id=career_id, resume=resume)
                     detail = Performance.objects.get(id=detail_id, career=career)
