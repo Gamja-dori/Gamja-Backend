@@ -181,6 +181,7 @@ class GetResumeAPIView(APIView):
             res = Response(
                 {
                     "resume_id": resume_id,
+                    "is_submitted": resume.is_submitted,
                     "resume": serializer.data,
                     "message": "이력서를 성공적으로 조회했습니다."
                 },

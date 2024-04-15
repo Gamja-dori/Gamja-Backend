@@ -11,5 +11,3 @@ class FilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = FilterResult
         fields = "__all__"
-        
-

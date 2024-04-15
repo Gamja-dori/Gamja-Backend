@@ -205,10 +205,17 @@ class ProfileImageView(APIView):
             
             user.profile_image = image_path
             user.save()
+            
+            with open(user.profile_image.path, "rb") as f: # 바이너리 읽기 모드로 열기
+                image_data = f.read()
+            
+            # 이미지를 base64로 인코딩
+            image_base64 = base64.b64encode(image_data)
 
             return Response(
                 {
-                    "message": "회원 프로필 사진이 성공적으로 변경되었습니다."
+                    "message": "회원 프로필 사진이 성공적으로 변경되었습니다.",
+                    "image": image_base64
                 },
                 status=status.HTTP_200_OK
             )
