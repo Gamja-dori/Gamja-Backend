@@ -194,10 +194,11 @@ class ResumeDetailView(APIView):
                     {
                         "view": resume.view, 
                         "resume_id": resume_id,
-                        "message": "이력서를 성공적으로 조회했습니다.",
+                        "is_verified": resume.is_verified,
                         "name": senior_user.name,
                         "profile_image": encode_base64(user.profile_image),
-                        "resume": serializer.data
+                        "resume": serializer.data,
+                        "message": "이력서를 성공적으로 조회했습니다.",
                     },
                     status=status.HTTP_200_OK,
                 )
