@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 import base64
+from django.core.exceptions import ObjectDoesNotExist
 
 def encode_base64(image_file):
     with open(image_file.path, "rb") as f: # 바이너리 읽기 모드로 열기
@@ -180,25 +181,26 @@ class ResumeDetailView(APIView):
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(tags=['기업 사용자가 시니어 전문가의 이력서 상세 내용을 조회합니다.'])
-    def get(self, request, user_id, resume_id):
-        resume = checkResumeExistence(user_id, resume_id)
-        
-        if resume:
-            serializer = ResumeSerializer(resume)
-            resume.view += 1
-            resume.save()
-            user = User.objects.get(id=resume.user_id)
-            senior_user = SeniorUser.objects.filter(user=user).first()
-            res = Response(
-                {
-                    "view": resume.view, 
-                    "resume_id": resume_id,
-                    "message": "이력서를 성공적으로 조회했습니다.",
-                    "name": senior_user.name,
-                    "profile_image": encode_base64(user.profile_image),
-                    "resume": serializer.data
-                },
-                status=status.HTTP_200_OK,
-            )
-            return res
-        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, resume_id):
+        try:
+            resume = Resume.objects.get(id=resume_id)
+            if resume:
+                serializer = ResumeSerializer(resume)
+                resume.view += 1
+                resume.save()
+                user = User.objects.get(id=resume.user_id)
+                senior_user = SeniorUser.objects.filter(user=user).first()
+                res = Response(
+                    {
+                        "view": resume.view, 
+                        "resume_id": resume_id,
+                        "message": "이력서를 성공적으로 조회했습니다.",
+                        "name": senior_user.name,
+                        "profile_image": encode_base64(user.profile_image),
+                        "resume": serializer.data
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
