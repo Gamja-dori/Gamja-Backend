@@ -3,7 +3,7 @@ from .serializers import *
 from resume.models import Resume
 from resume.views import checkResumeExistence
 from resume.serializers import ResumeSerializer
-from users.models import User
+from users.models import User, SeniorUser
 from .recommendation import search
 from rest_framework import status
 from rest_framework.views import APIView
@@ -37,6 +37,7 @@ class MainView(APIView):
                 break
             
             user = User.objects.filter(id=resume.user_id).first()
+            senior_user = SeniorUser.objects.filter(user=user).first()
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
@@ -46,6 +47,7 @@ class MainView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -79,6 +81,7 @@ class SearchResultCreateView(APIView):
         for score, resume_id, comments in search_result:
             resume = Resume.objects.get(id=resume_id)
             user = User.objects.get(id=resume.user_id)
+            senior_user = SeniorUser.objects.filter(user=user).first()
             
             response_data["resumes"].append({
                 "resume_id": resume.id,
@@ -91,6 +94,7 @@ class SearchResultCreateView(APIView):
                 "commute_type": resume.commute_type,
                 "score": score,
                 "comments": comments,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -152,6 +156,7 @@ class FilterResultCreateView(APIView):
         users = User.objects.filter(id__in=resumes.values_list('user_id', flat=True))
         
         for resume, user in zip(resumes, users): 
+            senior_user = SeniorUser.objects.filter(user=user).first()
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
@@ -161,6 +166,7 @@ class FilterResultCreateView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -181,11 +187,15 @@ class ResumeDetailView(APIView):
             serializer = ResumeSerializer(resume)
             resume.view += 1
             resume.save()
+            user = User.objects.get(id=resume.user_id)
+            senior_user = SeniorUser.objects.filter(user=user).first()
             res = Response(
                 {
                     "view": resume.view, 
                     "resume_id": resume_id,
                     "message": "이력서를 성공적으로 조회했습니다.",
+                    "name": senior_user.name,
+                    "profile_image": encode_base64(user.profile_image),
                     "resume": serializer.data
                 },
                 status=status.HTTP_200_OK,
