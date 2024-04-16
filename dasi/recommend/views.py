@@ -49,7 +49,7 @@ class MainView(APIView):
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
                 "name": senior_user.name,
-                "profile_image": user.profile_image.url,
+                "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
             })
         
         return Response(
@@ -95,7 +95,7 @@ class SearchResultCreateView(APIView):
                 "score": score,
                 "comments": comments,
                 "name": senior_user.name,
-                "profile_image": user.profile_image.url,
+                "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
             })
         
         return Response(
@@ -167,7 +167,7 @@ class FilterResultCreateView(APIView):
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
                 "name": senior_user.name,
-                "profile_image": user.profile_image.url,
+                "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
             })
         
         return Response(
