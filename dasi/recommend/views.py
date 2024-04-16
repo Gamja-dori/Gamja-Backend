@@ -1,7 +1,9 @@
 from .models import *
 from .serializers import *
 from resume.models import Resume
-from users.models import User
+from resume.views import checkResumeExistence
+from resume.serializers import ResumeSerializer
+from users.models import User, SeniorUser
 from .recommendation import search
 from rest_framework import status
 from rest_framework.views import APIView
@@ -9,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 import base64
+from django.core.exceptions import ObjectDoesNotExist
 
 def encode_base64(image_file):
     with open(image_file.path, "rb") as f: # 바이너리 읽기 모드로 열기
@@ -35,6 +38,7 @@ class MainView(APIView):
                 break
             
             user = User.objects.filter(id=resume.user_id).first()
+            senior_user = SeniorUser.objects.filter(user=user).first()
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
@@ -44,6 +48,7 @@ class MainView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -58,7 +63,7 @@ class SearchResultCreateView(APIView):
     permission_classes = [AllowAny] 
         
     def create_search_result(self, data):
-        user_id = int(data.get("user"))
+        user_id = int(data.get("user_id"))
         query = data.get("query")
         job_group = data.get("job_group")
         job_role = data.get("job_role")
@@ -77,6 +82,7 @@ class SearchResultCreateView(APIView):
         for score, resume_id, comments in search_result:
             resume = Resume.objects.get(id=resume_id)
             user = User.objects.get(id=resume.user_id)
+            senior_user = SeniorUser.objects.filter(user=user).first()
             
             response_data["resumes"].append({
                 "resume_id": resume.id,
@@ -89,6 +95,7 @@ class SearchResultCreateView(APIView):
                 "commute_type": resume.commute_type,
                 "score": score,
                 "comments": comments,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -150,6 +157,7 @@ class FilterResultCreateView(APIView):
         users = User.objects.filter(id__in=resumes.values_list('user_id', flat=True))
         
         for resume, user in zip(resumes, users): 
+            senior_user = SeniorUser.objects.filter(user=user).first()
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
@@ -159,6 +167,7 @@ class FilterResultCreateView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
+                "name": senior_user.name,
                 "profile_image": encode_base64(user.profile_image),
             })
         
@@ -166,3 +175,33 @@ class FilterResultCreateView(APIView):
             data = response_data,
             status=status.HTTP_200_OK,
         )
+        
+
+class ResumeDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['기업 사용자가 시니어 전문가의 이력서 상세 내용을 조회합니다.'])
+    def get(self, request, resume_id):
+        try:
+            resume = Resume.objects.get(id=resume_id)
+            if resume:
+                serializer = ResumeSerializer(resume)
+                resume.view += 1
+                resume.save()
+                user = User.objects.get(id=resume.user_id)
+                senior_user = SeniorUser.objects.filter(user=user).first()
+                res = Response(
+                    {
+                        "view": resume.view, 
+                        "resume_id": resume_id,
+                        "is_verified": resume.is_verified,
+                        "name": senior_user.name,
+                        "profile_image": encode_base64(user.profile_image),
+                        "resume": serializer.data,
+                        "message": "이력서를 성공적으로 조회했습니다.",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+        except ObjectDoesNotExist:
+            return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)
