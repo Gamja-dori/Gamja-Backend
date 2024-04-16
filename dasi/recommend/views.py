@@ -49,14 +49,13 @@ class MainView(APIView):
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
                 "name": senior_user.name,
-                "profile_image": encode_base64(user.profile_image),
+                "profile_image": user.profile_image.url,
             })
         
         return Response(
             data = response_data,
             status=status.HTTP_200_OK,
         )
-    
     
     
 class SearchResultCreateView(APIView):
@@ -96,7 +95,7 @@ class SearchResultCreateView(APIView):
                 "score": score,
                 "comments": comments,
                 "name": senior_user.name,
-                "profile_image": encode_base64(user.profile_image),
+                "profile_image": user.profile_image.url,
             })
         
         return Response(
@@ -168,7 +167,7 @@ class FilterResultCreateView(APIView):
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
                 "name": senior_user.name,
-                "profile_image": encode_base64(user.profile_image),
+                "profile_image": user.profile_image.url,
             })
         
         return Response(

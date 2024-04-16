@@ -104,6 +104,7 @@ class LoginView(APIView):
                     "is_senior": user.is_senior,
                     "is_enterprise": user.is_enterprise,
                     "message": "로그인에 성공했습니다.",
+                    "profile_image": user.profile_image.url,
                     "access": access_token,
                     "refresh": refresh_token
                 },
@@ -176,14 +177,10 @@ class ProfileImageView(APIView):
 
         try:
             image_file = user.profile_image
-            with open(image_file.path, "rb") as f: # 바이너리 읽기 모드로 열기
-                image_data = f.read()
             
-            # 이미지를 base64로 인코딩
-            image_base64 = base64.b64encode(image_data)
             res = {
                 "message": "회원 프로필 사진을 성공적으로 조회했습니다.",
-                "image": image_base64
+                "profile_image": image_file.url
             }
             return Response(res, status=200)
         except Exception as e:
@@ -206,16 +203,12 @@ class ProfileImageView(APIView):
             user.profile_image = image_path
             user.save()
             
-            with open(user.profile_image.path, "rb") as f: # 바이너리 읽기 모드로 열기
-                image_data = f.read()
-            
-            # 이미지를 base64로 인코딩
-            image_base64 = base64.b64encode(image_data)
+            image_file = user.profile_image
 
             return Response(
                 {
                     "message": "회원 프로필 사진이 성공적으로 변경되었습니다.",
-                    "image": image_base64
+                    "profile_image": image_file.url
                 },
                 status=status.HTTP_200_OK
             )
