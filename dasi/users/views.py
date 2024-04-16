@@ -104,7 +104,7 @@ class LoginView(APIView):
                     "is_senior": user.is_senior,
                     "is_enterprise": user.is_enterprise,
                     "message": "로그인에 성공했습니다.",
-                    "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
+                    "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
                     "access": access_token,
                     "refresh": refresh_token
                 },
@@ -178,7 +178,7 @@ class ProfileImageView(APIView):
         try:
             res = {
                 "message": "회원 프로필 사진을 성공적으로 조회했습니다.",
-                "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
+                "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
             }
             return Response(res, status=200)
         except Exception as e:
@@ -204,7 +204,7 @@ class ProfileImageView(APIView):
             return Response(
                 {
                     "message": "회원 프로필 사진이 성공적으로 변경되었습니다.",
-                    "profile_image": "https://api.dasi-expert.com/" + user.profile_image.url,
+                    "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
                 },
                 status=status.HTTP_200_OK
             )
