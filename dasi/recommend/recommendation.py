@@ -83,7 +83,7 @@ def calculate_similarity(project_overview, resumes):
 def get_skills_score(required, user):
     common = []
     for skill in required:
-        if skill.lower() in user:
+        if skill.lower() in user: 
             common.append(skill)
     
     if not required:     # 조건 없음
@@ -161,7 +161,7 @@ def search(project_overview, job_group, job_role, required_skills, required_pay,
         user_skills = set(resumes[i].skills.lower().strip('[]').split(', ')) 
         scores[2], common_skills = get_skills_score(required_skills, user_skills)
         if scores[2] > 0:
-            recommend_comments.append({"commentType": 2, "comments": [str(skill) for skill in common_skills[:3]]})
+            recommend_comments.append({"commentType": 2, "comments": [skill.strip('\"') for skill in common_skills[:3]]})
 
         # 급여
         user_pay = resumes[i].min_month_pay
