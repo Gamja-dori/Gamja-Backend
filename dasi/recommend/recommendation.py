@@ -91,9 +91,6 @@ def search(project_overview, resumes, comment_types):
     # 모든 이력서에 대해 검색어 점수 한 번에 계산
     search_result = calculate_similarity(project_overview, resumes)
 
-    if 2 in comment_types:
-        required_skills = list(str(comment_types[2]).strip('[]').split(', ')) 
-
     # 이력서마다 코멘트 추가
     for i in range(len(resumes)):
         score = search_result[i] # 점수
@@ -101,7 +98,8 @@ def search(project_overview, resumes, comment_types):
 
         # 스킬
         if 2 in comment_types:
-            comments.append({"commentType": 2, "comments": [skill.strip('\"') for skill in required_skills[:3]]})
+            required_skills = comment_types[2]
+            comments.append({"commentType": 2, "comments": required_skills[:3]})
 
         # 급여
         if 3 in comment_types:
