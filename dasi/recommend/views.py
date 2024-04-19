@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
-import base64
+import json
 from django.core.exceptions import ObjectDoesNotExist
 
 class MainView(APIView):
@@ -93,7 +93,7 @@ class SearchView(APIView):
             
         resumes = Resume.objects.filter(**filters)
         if skills and skills != '[]': 
-            comment_types[2] = skills
+            comment_types[2] = json.loads(skills)
             for skill in skills:
                 resumes = resumes.filter(skills__icontains=skill)
                 
