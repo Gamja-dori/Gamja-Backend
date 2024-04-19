@@ -112,7 +112,7 @@ class SearchView(APIView):
         resumes, comment_types = self.get_filtered_resumes(data=data)
         
         # 유사도 점수 계산
-        search_result = search(query, resumes, comment_types)
+        search_result = search(query, resumes, comment_types, user_id)
         
         response_data = {
             "resumes": []
@@ -132,7 +132,6 @@ class SearchView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
-                "score": score,
                 "comments": comments,
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
