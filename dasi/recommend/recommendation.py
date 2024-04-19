@@ -94,7 +94,10 @@ def search(project_overview, resumes, comment_types):
     # 이력서마다 코멘트 추가
     for i in range(len(resumes)):
         score = search_result[i] # 점수
-        comments = []  # 코멘트        
+        comments = []
+        
+        if score:
+            comments.append({"commentType": 1, "comments": score}) # 코멘트        
 
         # 스킬
         if 2 in comment_types:
