@@ -2,6 +2,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from konlpy.tag import Hannanum
 from resume.models import *
+from users.models import *
 import numpy as np
 import pickle
 import nltk
@@ -85,8 +86,14 @@ def get_final_score(score):
     return final_score if final_score > 0 else 0
 
 
-def search(project_overview, resumes, comment_types):
+def search(project_overview, resumes, comment_types, user_id):
     final_scores = [0] * len(resumes)
+    if user_id != -1:
+        user = User.objects.get(id=user_id)
+        if user.is_senior:
+            member = SeniorUser.objects.get(user_id=user_id)
+        else:
+            member = EnterpriseUser.objects.get(user_id=user_id)
 
     # 모든 이력서에 대해 검색어 점수 한 번에 계산
     search_result = calculate_similarity(project_overview, resumes)
@@ -94,10 +101,14 @@ def search(project_overview, resumes, comment_types):
     # 이력서마다 코멘트 추가
     for i in range(len(resumes)):
         score = search_result[i] # 점수
+        final_score = get_final_score(score)
         comments = []
         
         if score:
-            comments.append({"commentType": 1, "comments": score}) # 코멘트        
+            if user_id != -1:
+                comments.append({"commentType": 1, "comments": [member.name, final_score]}) # 코멘트 
+            else:
+                comments.append({"commentType": 1, "comments": ["-", final_score]})
 
         # 스킬
         if 2 in comment_types:
@@ -113,7 +124,6 @@ def search(project_overview, resumes, comment_types):
             comments.append({"commentType": 4, "comments": [str(resumes[i].career_year)]})
 
         # 최종 점수 산출
-        final_score = get_final_score(score)
         final_scores[i] = (final_score, resumes[i].id, comments)
 
     # 점수가 높은 순으로 정렬
