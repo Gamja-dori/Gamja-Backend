@@ -88,11 +88,12 @@ def get_final_score(score):
 
 def search(project_overview, resumes, comment_types, user_id):
     final_scores = [0] * len(resumes)
-    user = User.objects.get(id=user_id)
-    if user.is_senior:
-        member = SeniorUser.objects.get(user_id=user_id)
-    else:
-        member = EnterpriseUser.objects.get(user_id=user_id)
+    if user_id != -1:
+        user = User.objects.get(id=user_id)
+        if user.is_senior:
+            member = SeniorUser.objects.get(user_id=user_id)
+        else:
+            member = EnterpriseUser.objects.get(user_id=user_id)
 
     # 모든 이력서에 대해 검색어 점수 한 번에 계산
     search_result = calculate_similarity(project_overview, resumes)
@@ -104,7 +105,10 @@ def search(project_overview, resumes, comment_types, user_id):
         comments = []
         
         if score:
-            comments.append({"commentType": 1, "comments": [member.name, final_score]}) # 코멘트        
+            if user_id != -1:
+                comments.append({"commentType": 1, "comments": [member.name, final_score]}) # 코멘트 
+            else:
+                comments.append({"commentType": 1, "comments": ["-", final_score]})
 
         # 스킬
         if 2 in comment_types:
