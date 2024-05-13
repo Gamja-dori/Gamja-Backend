@@ -17,5 +17,5 @@ jobs:
         with:
           host: ${{ secrets.EC2_PUBLIC_ADDR }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SECRET_KEY }}
+          key: ${{ secrets.SSH_KEY }}
           script: "cd /home/ubuntu/Gamja-Backend/dasi; ./scripts/rebuild.sh"
