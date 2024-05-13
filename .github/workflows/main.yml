@@ -12,13 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - run: cd ~/Gamja-Backend/dasi
-
       - name: Docker build
-        run: docker system prune -af && docker-compose build && docker-compose up
-
-      - name: Docker Login
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Docker Push
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/dasi
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_PUBLIC_ADDR }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SECRET_KEY }}
+          script: "cd /home/ubuntu/Gamja-Backend/dasi; ./scripts/rebuild.sh"
