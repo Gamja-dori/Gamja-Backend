@@ -67,6 +67,7 @@ class SearchView(APIView):
         duration_start = data.get("duration_start")
         duration_end = data.get("duration_end")
         max_month_pay = data.get("max_month_pay")
+        min_month_pay = data.get("min_month_pay")
         commute_type = data.get("commute_type")
         
         comment_types = dict()
@@ -75,15 +76,18 @@ class SearchView(APIView):
             filters['job_group'] = job_group
         if job_role:
             filters['job_role'] = job_role
-        if min_career_year:
+        if min_career_year != 0:
+            comment_types[4] = True
             filters['career_year__gte'] = min_career_year
         if max_career_year != self.DEFAULT_CAREER_YEAR:
             comment_types[4] = True
             filters['career_year__lte'] = max_career_year
-        if duration_start: 
+        if duration_start != 0: 
             filters['duration_end__gte'] = duration_start
         if duration_end != self.DEFAULT_DURATION: 
             filters['duration_start__lte'] = duration_end
+        if min_month_pay != 0:
+            comment_types[3] = True
         if max_month_pay != self.DEFAULT_PAY:
             comment_types[3] = True
             filters['min_month_pay__lte'] = max_month_pay
@@ -108,7 +112,7 @@ class SearchView(APIView):
         resumes, comment_types = self.get_filtered_resumes(data=data)
         
         # 유사도 점수 계산
-        search_result = search(query, resumes, comment_types)
+        search_result = search(query, resumes, comment_types, user_id)
         
         response_data = {
             "resumes": []
@@ -128,7 +132,6 @@ class SearchView(APIView):
                 "career_year": resume.career_year,
                 "skills": resume.skills, 
                 "commute_type": resume.commute_type,
-                "score": score,
                 "comments": comments,
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,

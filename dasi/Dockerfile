@@ -1,7 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.12-slim
-
-EXPOSE 8000
+FROM python:3.12-bullseye
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -14,10 +12,17 @@ COPY requirements.txt .
 RUN apt-get update && apt-get install -y pkg-config python3-dev default-libmysqlclient-dev build-essential && pip install mysqlclient
 RUN python -m pip install -r requirements.txt
 
+RUN apt-get update
+RUN apt-get install -y openjdk-11-jdk
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
+RUN export JAVA_HOME
+
+RUN python -c "import nltk; nltk.download('punkt', download_dir='/usr/local/nltk_data')"
+
 WORKDIR /app
 COPY . /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
+# Creates a non-root user with an explicit UID and adds permission to access the /dasi folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
