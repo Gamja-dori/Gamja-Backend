@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'users',
     'recommend',
     'resume',
+    'payment',
 
     # Swagger 
     'drf_yasg',
