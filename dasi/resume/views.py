@@ -345,3 +345,59 @@ class GetDefaultResumeAPIView(APIView):
                 )
             return res
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+def copyDetails(objects, resume_id, isCareer=False):
+    if isCareer:
+        for o in objects:
+            original_career = o.pk
+            o.resume_id = resume_id
+            o.pk = None
+            o.save()
+            new_career = Career.objects.last()
+            performances = Performance.objects.filter(career_id=original_career)
+            for p in performances:
+                p.career_id = new_career.pk
+                p.pk = None
+                p.save()
+    else:
+        for o in objects:
+            o.resume_id = resume_id
+            o.pk = None
+            o.save()
+
+class CopyResumeAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['기존 이력서를 복제합니다.'], request_body=FindResumeSerializer)
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        resume_id = request.data.get('resume_id')
+        resume = checkResumeExistence(user_id, resume_id)
+        if resume:
+            resume.pk = None
+            resume.is_default = False
+            resume.is_submitted = False
+            resume.title = resume.title + "의 사본"
+            resume.save()
+            new_resume = Resume.objects.last()
+            careers = Career.objects.filter(resume_id=resume_id)
+            educations = Education.objects.filter(resume_id=resume_id)
+            projects = Project.objects.filter(resume_id=resume_id)
+            portfolios = Portfolio.objects.filter(resume_id=resume_id)
+            copyDetails(careers, new_resume.pk, True)
+            copyDetails(educations, new_resume.pk)          
+            copyDetails(projects, new_resume.pk)
+            copyDetails(portfolios, new_resume.pk)    
+            serializer = ResumeCardSerializer(new_resume, data=request.data)
+            if serializer.is_valid():
+                res = Response(
+                    {
+                        "user_id": user_id,
+                        "resume_id": resume.id,
+                        "resume": serializer.data,
+                        "message": "이력서가 성공적으로 복제되었습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
