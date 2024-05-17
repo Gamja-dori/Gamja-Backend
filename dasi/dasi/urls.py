@@ -32,7 +32,9 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('resumes/', include('resume.urls')),
     path('recommends/', include('recommend.urls')),
+    path('payments/', include('payment.urls')),
     path('health/', health_check),
 ]
+
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
