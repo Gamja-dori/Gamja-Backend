@@ -5,13 +5,133 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
-from .serializers import PaymentSerializer
-from .models import Payment
+from django.core.exceptions import ObjectDoesNotExist
+from .serializers import *
+from .models import *
+from users.models import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(DEBUG=(bool, True))
 environ.Env.read_env()
 
+class SuggestCreateView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['기업 사용자가 채용 제안을 전송합니다.'])
+    def post(self, request):
+        serializer = SuggestSerializer(data=request.data)
+            
+        if serializer.is_valid():
+            suggest = serializer.create(validated_data=request.data)
+            res = Response(
+                {
+                    "suggest_id": str(suggest.id),
+                    "message": "채용 제안이 성공적으로 생성되었습니다.",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+            return res        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetListViewBase(APIView):
+    permission_classes = [AllowAny]
+    model = None
+    filter_field = None
+
+    def get_suggests_list(self, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except ObjectDoesNotExist:
+            return None 
+        
+        if not (self.model == SeniorUser and user.is_senior) and not (self.model == EnterpriseUser and user.is_enterprise):
+            return None        
+        
+        member = self.model.objects.filter(user=user).first()
+        if not member:
+            return None
+        
+        suggests = Suggest.objects.filter(**{self.filter_field: member})
+        
+        return suggests
+       
+
+class GetEnterpriseListView(GetListViewBase):
+    model = SeniorUser
+    filter_field = 'senior'
+    
+    @swagger_auto_schema(tags=['시니어 사용자가 받은 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        suggests = self.get_suggests_list(user_id)
+        if suggests is None:
+            return Response({"error": "Invalid User"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_data = {
+            "suggests": [
+                {
+                    "suggest_id": suggest.id,
+                    "company": suggest.enterprise.company,
+                    "is_cancelled": suggest.is_cancelled,
+                    "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
+                }
+                for suggest in suggests
+            ]
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+
+class GetSeniorListView(GetListViewBase):
+    model = EnterpriseUser
+    filter_field = 'enterprise'
+    
+    @swagger_auto_schema(tags=['기업 사용자가 보낸 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        suggests = self.get_suggests_list(user_id)
+        
+        if suggests is None:
+            return Response({"error": "Invalid User"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_data = {
+            "suggests": [
+                {
+                    "suggest_id": suggest.id,
+                    "name": suggest.senior.name,
+                    "is_accepted": suggest.is_accepted,
+                    "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
+                }
+                for suggest in suggests
+            ]
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class GetSuggestDetailView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['채용 제안의 상세 내용을 조회합니다.'])
+    def get(self, request, suggest_id):
+        try:
+            suggest = Suggest.objects.get(id=suggest_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Suggest Not Found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = {
+            "suggest_id": suggest.id,
+            "start_year_month": suggest.start_year_month,
+            "end_year_month": suggest.end_year_month,
+            "suggest_id": suggest.id,
+            "pay": suggest.pay,
+            "duration": suggest.duration,
+            "job_description": suggest.job_description,
+            "is_cancelled": suggest.is_cancelled,
+            "is_accepted": suggest.is_accepted,
+            "is_paid": suggest.is_paid,
+            "is_expired": suggest.is_expired,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    
 class PaymentRequestView(APIView):
     permission_classes = [AllowAny]
     
@@ -68,7 +188,7 @@ class PaymentRequestView(APIView):
             return Response(status=500, data=data)
                 
 
-class ApproveView(APIView):
+class PaymentApproveView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
@@ -95,14 +215,14 @@ class ApproveView(APIView):
         return Response(response)
     
 
-class FailView(APIView):
+class PaymentFailView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
         return Response(status=200)
     
     
-class CancelView(APIView):
+class PaymentCancelView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):

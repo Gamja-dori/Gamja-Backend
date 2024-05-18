@@ -2,9 +2,13 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('pay/', PaymentRequestView.as_view(), name='paymentRequest'),
-    path('pay/approve/', ApproveView.as_view(), name='approve'),
-    path('pay/fail/', FailView.as_view(), name='fail'),
-    path('pay/cancel/', CancelView.as_view(), name='cancel'),
+    path('create/', SuggestCreateView.as_view(), name='create'),
+    path('enterprise/<int:user_id>/', GetSeniorListView.as_view(), name='senior_list'), 
+    path('senior/<int:user_id>/', GetEnterpriseListView.as_view(), name='enterprise_list'), 
+    path('<int:suggest_id>/', GetSuggestDetailView.as_view(), name='suggest_detail'),
+    path('pay/', PaymentRequestView.as_view(), name='payment_request'),
+    path('pay/approve/', PaymentApproveView.as_view(), name='payment_approve'),
+    path('pay/fail/', PaymentFailView.as_view(), name='payment_fail'),
+    path('pay/cancel/', PaymentCancelView.as_view(), name='payment_cancel'),
 ]
 
