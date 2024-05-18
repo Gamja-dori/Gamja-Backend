@@ -28,6 +28,7 @@ class EnterpriseUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='enterprise_users')
     name = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=20)
+    company = models.CharField(max_length=20, default='삼성전자')
     business_number = models.CharField(max_length=20)
     is_certified = models.BooleanField(default=False) # 사업자번호 인증 여부
 

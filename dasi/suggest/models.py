@@ -4,14 +4,15 @@ class Suggest(models.Model):
     id = models.AutoField(primary_key=True)
     enterprise = models.ForeignKey('users.EnterpriseUser', on_delete=models.CASCADE, default=-1)
     senior = models.ForeignKey('users.SeniorUser', on_delete=models.CASCADE, default=-1)
-    start_year_month = models.CharField(blank=True, max_length=7)            
-    end_year_month = models.CharField(blank=True, max_length=7)                       
+    start_year_month = models.CharField(max_length=7)            
+    end_year_month = models.CharField(max_length=7)                       
     pay = models.IntegerField()
-    duraton = models.IntegerField()
+    duration = models.IntegerField()
     job_description = models.TextField()
-    is_accepted = models.BooleanField(default=False) # 제안 수락 여부
-    is_paid = models.BooleanField(default=False)     # 결제 여부
-    is_expired = models.BooleanField(default=False)  # 계약 만료 여부
+    is_cancelled = models.BooleanField(default=False) # 채용 취소 여부
+    is_accepted = models.BooleanField(default=False)  # 제안 수락 여부
+    is_paid = models.BooleanField(default=False)      # 결제 여부
+    is_expired = models.BooleanField(default=False)   # 계약 만료 여부
     
     class Meta: 
         db_table = 'suggests'
@@ -20,8 +21,8 @@ class Suggest(models.Model):
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey('users.EnterpriseUser', on_delete=models.CASCADE, default=-1)
-    item_name = models.CharField(max_length=100)                # 상품명
-    total_amount = models.IntegerField()                        # 금액
+    item_name = models.CharField(max_length=100)                       # 상품명
+    total_amount = models.IntegerField()                               # 금액
     
     # 응답에서 받아올 값
     aid = models.CharField(max_length=20, default='')                  # 요청 고유 번호
