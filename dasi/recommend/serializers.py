@@ -3,11 +3,5 @@ from .models import *
 
 class SearchSerializer(serializers.ModelSerializer):   
     class Meta:
-        model = SearchResult
-        fields = "__all__"
-
-
-class FilterSerializer(serializers.ModelSerializer):   
-    class Meta:
-        model = FilterResult
+        model = SearchHistory
         fields = "__all__"

@@ -32,7 +32,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('resumes/', include('resume.urls')),
     path('recommends/', include('recommend.urls')),
-    path('payments/', include('payment.urls')),
+    path('suggests/', include('suggest.urls')),
     path('health/', health_check),
 ]
 
