@@ -287,3 +287,18 @@ class PaymentCancelView(APIView):
     
     def get(self, request):
         return Response(status=200)
+    
+
+class GetIsPaidView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['채용 제안의 결제 여부를 조회합니다.'])
+    def get(self, request, suggest_id):
+        try:
+            suggest = Suggest.objects.get(id=suggest_id)
+        except Suggest.DoesNotExist:
+            return Response({"error": "Suggest not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({
+            "is_paid": suggest.is_paid
+        }, status=status.HTTP_200_OK) 

@@ -13,5 +13,5 @@ urlpatterns = [
     path('pay/approve/', PaymentApproveView.as_view()),
     path('pay/fail/', PaymentFailView.as_view()),
     path('pay/cancel/', PaymentCancelView.as_view()),
-    # path('pay/<int:suggest_id>/', GetIsPaidView.as_view()),    
+    path('pay/<int:suggest_id>/', GetIsPaidView.as_view()),    
 ]
