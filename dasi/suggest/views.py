@@ -57,16 +57,18 @@ class GetListViewBase(APIView):
         return suggests
        
 
-class GetEnterpriseListView(GetListViewBase):
+class BaseEnterpriseListView(GetListViewBase):
     model = SeniorUser
     filter_field = 'senior'
+    suggest_filter = None
     
-    @swagger_auto_schema(tags=['시니어 사용자가 받은 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
         suggests = self.get_suggests_list(user_id)
         if suggests is None:
-            return Response({"error": "Invalid User"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
         
+        suggests = suggests.filter(**self.suggest_filter)
+         
         response_data = {
             "suggests": [
                 {
@@ -79,6 +81,22 @@ class GetEnterpriseListView(GetListViewBase):
             ]
         }
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class GetReadEnterpriseListView(BaseEnterpriseListView):
+    suggest_filter = {'is_read': True}
+
+    @swagger_auto_schema(tags=['시니어 사용자가 읽은 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        return super().get(request, user_id)
+
+
+class GetUnreadEnterpriseListView(BaseEnterpriseListView):
+    suggest_filter = {'is_read': False}
+    
+    @swagger_auto_schema(tags=['시니어 사용자가 읽지 않은 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        return super().get(request, user_id)
     
 
 class GetSeniorListView(GetListViewBase):
@@ -130,7 +148,49 @@ class GetSuggestDetailView(APIView):
             "is_expired": suggest.is_expired,
         }
         return Response(response_data, status=status.HTTP_200_OK)
+    
 
+class NotificationView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['시니어 사용자의 새로운 알림 개수를 조회합니다.'])
+    def get(self, request, user_id):
+        try:
+            senior = SeniorUser.objects.get(user_id=user_id)
+        except SeniorUser.DoesNotExist:
+            return Response({"error": "Senior user not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        notifications_count = Suggest.objects.filter(senior=senior, is_read=False).count() 
+        
+        return Response({
+            "notifications_count": notifications_count,
+        }, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(tags=['시니어 사용자의 채용 제안 열람 여부를 갱신합니다.'])
+    def patch(self, request):
+        user_id = request.data.get('user_id')
+        suggest_id = request.data.get('suggest_id')
+
+        if not user_id or not suggest_id:
+            return Response({"error": "User ID and Suggest ID are required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            senior = SeniorUser.objects.get(user_id=user_id)
+            suggest = Suggest.objects.get(id=suggest_id, senior=senior)
+        except SeniorUser.DoesNotExist:
+            return Response({"error": "Senior user not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Suggest.DoesNotExist:
+            return Response({"error": "Suggest not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        suggest.is_read = True # 열람 여부 갱신
+        suggest.save()
+
+        return Response({
+            "suggest_id": suggest.id,
+            "is_read": suggest.is_read,
+            "message": "채용 제안 열람 여부가 성공적으로 갱신되었습니다."
+        }, status=status.HTTP_200_OK)
+        
     
 class PaymentRequestView(APIView):
     permission_classes = [AllowAny]
@@ -227,3 +287,18 @@ class PaymentCancelView(APIView):
     
     def get(self, request):
         return Response(status=200)
+    
+
+class GetIsPaidView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['채용 제안의 결제 여부를 조회합니다.'])
+    def get(self, request, suggest_id):
+        try:
+            suggest = Suggest.objects.get(id=suggest_id)
+        except Suggest.DoesNotExist:
+            return Response({"error": "Suggest not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({
+            "is_paid": suggest.is_paid
+        }, status=status.HTTP_200_OK) 
