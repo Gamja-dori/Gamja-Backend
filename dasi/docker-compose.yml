@@ -7,6 +7,7 @@ services:
       - "80:80"
     volumes:
       - static:/usr/src/app/static
+      - ./static/drf-yasg:/usr/src/app/static/drf-yasg
       - media:/usr/src/app/media
     depends_on: 
       - web

@@ -22,7 +22,6 @@ RUN python -c "import nltk; nltk.download('punkt', download_dir='/usr/local/nltk
 WORKDIR /app
 COPY . /app
 
-COPY ./static /app/static
 
 # Creates a non-root user with an explicit UID and adds permission to access the /dasi folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
