@@ -164,6 +164,7 @@ class ResumeDetailView(APIView):
                 senior_user = SeniorUser.objects.filter(user=user).first()
                 res = Response(
                     {
+                        "user_id": user.id,
                         "view": resume.view, 
                         "resume_id": resume_id,
                         "is_verified": resume.is_verified,

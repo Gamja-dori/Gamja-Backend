@@ -17,7 +17,7 @@ environ.Env.read_env()
 class SuggestCreateView(APIView):
     permission_classes = [AllowAny]
     
-    @swagger_auto_schema(tags=['기업 사용자가 채용 제안을 전송합니다.'])
+    @swagger_auto_schema(tags=['기업 사용자가 채용 제안을 전송합니다.'], request_body=SuggestSerializer)
     def post(self, request):
         serializer = SuggestSerializer(data=request.data)
             

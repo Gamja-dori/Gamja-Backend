@@ -5,7 +5,7 @@ from users.models import SeniorUser, EnterpriseUser
 class SuggestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suggest
-        fields = '__all__'
+        fields = ['senior', 'enterprise', 'commute_type', 'start_year_month', 'end_year_month', 'pay', 'job_description']
 
     def create(self, validated_data):
         senior = SeniorUser.objects.get(user_id=validated_data['senior_id'])
@@ -14,6 +14,7 @@ class SuggestSerializer(serializers.ModelSerializer):
         suggest = Suggest.objects.create(
             senior=senior,
             enterprise=enterprise,
+            commute_type=validated_data['commute_type'],
             start_year_month=validated_data['start_year_month'],
             end_year_month=validated_data['end_year_month'],
             pay=validated_data['pay'],

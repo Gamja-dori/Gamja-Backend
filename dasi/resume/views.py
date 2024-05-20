@@ -179,6 +179,7 @@ class GetResumeAPIView(APIView):
             serializer = ResumeSerializer(resume)
             res = Response(
                 {
+                    "user_id": user_id,
                     "resume_id": resume_id,
                     "is_submitted": resume.is_submitted,
                     "resume": serializer.data,

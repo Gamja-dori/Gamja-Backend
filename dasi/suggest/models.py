@@ -4,6 +4,7 @@ class Suggest(models.Model):
     id = models.AutoField(primary_key=True)
     enterprise = models.ForeignKey('users.EnterpriseUser', on_delete=models.CASCADE, default=-1)
     senior = models.ForeignKey('users.SeniorUser', on_delete=models.CASCADE, default=-1)
+    commute_type = models.CharField(max_length=20, default='희망 근무 형태')
     start_year_month = models.CharField(max_length=7)            
     end_year_month = models.CharField(max_length=7)                       
     pay = models.IntegerField()
