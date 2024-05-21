@@ -22,6 +22,15 @@ class SuggestCreateView(APIView):
         serializer = SuggestSerializer(data=request.data)
             
         if serializer.is_valid():
+            # 시니어, 기업, 이력서의 존재 여부 검증
+            try:
+                senior = SeniorUser.objects.get(user_id=request.data['senior_id'])
+                EnterpriseUser.objects.get(user_id=request.data['enterprise_id'])
+                Resume.objects.get(id=request.data['resume_id'], user=senior)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # 채용 제안 생성
             suggest = serializer.create(validated_data=request.data)
             res = Response(
                 {
@@ -34,7 +43,7 @@ class SuggestCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GetListViewBase(APIView):
+class BaseListView(APIView):
     permission_classes = [AllowAny]
     model = None
     filter_field = None
@@ -57,7 +66,7 @@ class GetListViewBase(APIView):
         return suggests
        
 
-class BaseEnterpriseListView(GetListViewBase):
+class BaseEnterpriseListView(BaseListView):
     model = SeniorUser
     filter_field = 'senior'
     suggest_filter = None
@@ -73,6 +82,7 @@ class BaseEnterpriseListView(GetListViewBase):
             "suggests": [
                 {
                     "suggest_id": suggest.id,
+                    "resume_id": suggest.resume.id,
                     "company": suggest.enterprise.company,
                     "is_cancelled": suggest.is_cancelled,
                     "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
@@ -99,29 +109,55 @@ class GetUnreadEnterpriseListView(BaseEnterpriseListView):
         return super().get(request, user_id)
     
 
-class GetSeniorListView(GetListViewBase):
+class GetSeniorListView(BaseListView):
     model = EnterpriseUser
     filter_field = 'enterprise'
+    suggest_filter = None
     
-    @swagger_auto_schema(tags=['기업 사용자가 보낸 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
         suggests = self.get_suggests_list(user_id)
-        
         if suggests is None:
-            return Response({"error": "Invalid User"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if self.suggest_filter:
+            suggests = suggests.filter(**self.suggest_filter)
         
         response_data = {
             "suggests": [
                 {
                     "suggest_id": suggest.id,
+                    "is_verified": suggest.resume.is_verified,
+                    "resume_id": suggest.resume.id,
                     "name": suggest.senior.name,
-                    "is_accepted": suggest.is_accepted,
+                    "career_year": suggest.resume.career_year,
+                    "job_group": suggest.resume.job_group,
+                    "job_name": suggest.resume.job_role,
+                    "date": suggest.resume.created_at,
+                    "commute_type": suggest.resume.commute_type, 
                     "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
-                }
+                    "is_accepted": suggest.is_accepted,
+                    "is_paid": suggest.is_paid,
+                } 
                 for suggest in suggests
             ]
         }
         return Response(response_data, status=status.HTTP_200_OK)
+    
+
+class GetPaidSeniorListView(GetSeniorListView):
+    suggest_filter = {'is_paid': True}
+
+    @swagger_auto_schema(tags=['기업 사용자의 결제 완료된 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        return super().get(request, user_id)
+
+
+class GetUnpaidSeniorListView(GetSeniorListView):
+    suggest_filter = {'is_paid': False}
+    
+    @swagger_auto_schema(tags=['기업 사용자의 결제되지 않은 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        return super().get(request, user_id)
 
 
 class GetSuggestDetailView(APIView):
@@ -302,3 +338,4 @@ class GetIsPaidView(APIView):
         return Response({
             "is_paid": suggest.is_paid
         }, status=status.HTTP_200_OK) 
+        
