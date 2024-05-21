@@ -4,6 +4,8 @@ from .views import *
 urlpatterns = [
     path('create/', SuggestCreateView.as_view()),
     path('enterprise/<int:user_id>/', GetSeniorListView.as_view()), 
+    path('enterprise/<int:user_id>/paid/', GetPaidSeniorListView.as_view()), 
+    path('enterprise/<int:user_id>/unpaid/', GetUnpaidSeniorListView.as_view()), 
     path('senior/<int:user_id>/read/', GetReadEnterpriseListView.as_view()), 
     path('senior/<int:user_id>/unread/', GetUnreadEnterpriseListView.as_view()), 
     path('<int:suggest_id>/', GetSuggestDetailView.as_view()),

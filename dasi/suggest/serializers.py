@@ -1,19 +1,22 @@
 from rest_framework import serializers
 from .models import *
 from users.models import SeniorUser, EnterpriseUser
+from resume.models import Resume
 
 class SuggestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Suggest
-        fields = ['senior', 'enterprise', 'commute_type', 'start_year_month', 'end_year_month', 'pay', 'job_description']
+        fields = ['senior', 'enterprise', 'resume', 'commute_type', 'start_year_month', 'end_year_month', 'pay', 'job_description']
 
     def create(self, validated_data):
         senior = SeniorUser.objects.get(user_id=validated_data['senior_id'])
         enterprise = EnterpriseUser.objects.get(user_id=validated_data['enterprise_id'])
+        resume = Resume.objects.get(id=validated_data['resume_id'], user=senior)
 
         suggest = Suggest.objects.create(
             senior=senior,
             enterprise=enterprise,
+            resume=resume,
             commute_type=validated_data['commute_type'],
             start_year_month=validated_data['start_year_month'],
             end_year_month=validated_data['end_year_month'],
