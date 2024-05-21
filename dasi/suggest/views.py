@@ -132,8 +132,11 @@ class GetEnterpriseNotificationsView(BaseListView):
                 {
                     "suggest_id": suggest.id,
                     "resume_id": suggest.resume.id,
+                    "name": suggest.senior.name,
                     "is_accepted": suggest.is_accepted,
                     "is_cancelled": suggest.is_cancelled,
+                    "is_paid": suggest.is_paid,
+                    "is_read": suggest.is_enterprise_read,
                     "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
                 }
                 for suggest in suggests
@@ -159,6 +162,7 @@ class GetSeniorNotificationsView(BaseListView):
                     "resume_id": suggest.resume.id,
                     "company": suggest.enterprise.company,
                     "is_cancelled": suggest.is_cancelled,
+                    "is_read": suggest.is_senior_read,
                     "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
                 }
                 for suggest in suggests
