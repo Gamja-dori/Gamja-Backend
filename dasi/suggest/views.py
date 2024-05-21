@@ -14,7 +14,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env(DEBUG=(bool, True))
 environ.Env.read_env()
 
-class SuggestCreateView(APIView):
+class CreateSuggestView(APIView):
     permission_classes = [AllowAny]
     
     @swagger_auto_schema(tags=['기업 사용자가 채용 제안을 전송합니다.'], request_body=SuggestSerializer)
@@ -64,50 +64,7 @@ class BaseListView(APIView):
         suggests = Suggest.objects.filter(**{self.filter_field: member})
         
         return suggests
-       
 
-class BaseEnterpriseListView(BaseListView):
-    model = SeniorUser
-    filter_field = 'senior'
-    suggest_filter = None
-    
-    def get(self, request, user_id):
-        suggests = self.get_suggests_list(user_id)
-        if suggests is None:
-            return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        suggests = suggests.filter(**self.suggest_filter)
-         
-        response_data = {
-            "suggests": [
-                {
-                    "suggest_id": suggest.id,
-                    "resume_id": suggest.resume.id,
-                    "company": suggest.enterprise.company,
-                    "is_cancelled": suggest.is_cancelled,
-                    "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
-                }
-                for suggest in suggests
-            ]
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-
-
-class GetReadEnterpriseListView(BaseEnterpriseListView):
-    suggest_filter = {'is_read': True}
-
-    @swagger_auto_schema(tags=['시니어 사용자가 읽은 채용 제안 목록을 조회합니다.'])
-    def get(self, request, user_id):
-        return super().get(request, user_id)
-
-
-class GetUnreadEnterpriseListView(BaseEnterpriseListView):
-    suggest_filter = {'is_read': False}
-    
-    @swagger_auto_schema(tags=['시니어 사용자가 읽지 않은 채용 제안 목록을 조회합니다.'])
-    def get(self, request, user_id):
-        return super().get(request, user_id)
-    
 
 class GetSeniorListView(BaseListView):
     model = EnterpriseUser
@@ -158,48 +115,65 @@ class GetUnpaidSeniorListView(GetSeniorListView):
     @swagger_auto_schema(tags=['기업 사용자의 결제되지 않은 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
         return super().get(request, user_id)
-
-
-class GetSuggestDetailView(APIView):
-    permission_classes = [AllowAny]
     
-    @swagger_auto_schema(tags=['채용 제안의 상세 내용을 조회합니다.'])
-    def get(self, request, suggest_id):
-        try:
-            suggest = Suggest.objects.get(id=suggest_id)
-        except ObjectDoesNotExist:
-            return Response({"error": "Suggest Not Found"}, status=status.HTTP_404_NOT_FOUND)
+    
+class GetEnterpriseNotificationsView(BaseListView):
+    model = EnterpriseUser
+    filter_field = 'enterprise'
+    
+    @swagger_auto_schema(tags=['기업 사용자의 알림창에서 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        suggests = self.get_suggests_list(user_id)
+        if suggests is None:
+            return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
         
         response_data = {
-            "suggest_id": suggest.id,
-            "commute_type": suggest.commute_type,
-            "start_year_month": suggest.start_year_month,
-            "end_year_month": suggest.end_year_month,
-            "pay": suggest.pay,
-            "duration": suggest.duration,
-            "job_description": suggest.job_description,
-            "is_cancelled": suggest.is_cancelled,
-            "is_accepted": suggest.is_accepted,
-            "is_paid": suggest.is_paid,
-            "is_expired": suggest.is_expired,
-            "company": suggest.enterprise.company,
-            "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url
+            "suggests": [
+                {
+                    "suggest_id": suggest.id,
+                    "resume_id": suggest.resume.id,
+                    "name": suggest.senior.name,
+                    "is_accepted": suggest.is_accepted,
+                    "is_cancelled": suggest.is_cancelled,
+                    "is_paid": suggest.is_paid,
+                    "is_read": suggest.is_enterprise_read,
+                    "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
+                }
+                for suggest in suggests
+            ]
         }
         return Response(response_data, status=status.HTTP_200_OK)
     
 
-class NotificationView(APIView):
+class GetSeniorNotificationsView(BaseListView):
+    model = SeniorUser
+    filter_field = 'senior'
+    
+    @swagger_auto_schema(tags=['시니어 사용자의 알림창에서 채용 제안 목록을 조회합니다.'])
+    def get(self, request, user_id):
+        suggests = self.get_suggests_list(user_id)
+        if suggests is None:
+            return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_data = {
+            "suggests": [
+                {
+                    "suggest_id": suggest.id,
+                    "resume_id": suggest.resume.id,
+                    "company": suggest.enterprise.company,
+                    "is_cancelled": suggest.is_cancelled,
+                    "is_read": suggest.is_senior_read,
+                    "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
+                }
+                for suggest in suggests
+            ]
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class GetNotificationCountView(APIView):   
     permission_classes = [AllowAny]
-    
-    def get_suggest_from_user(self, user, suggest_id):
-        if user.is_senior:
-            senior = SeniorUser.objects.get(user=user)
-            suggest = Suggest.objects.get(id=suggest_id, senior=senior)
-        else:
-            enterprise = EnterpriseUser.objects.get(user=user)
-            suggest = Suggest.objects.get(id=suggest_id, enterprise=enterprise)   
-        return suggest 
-    
+     
     @swagger_auto_schema(tags=['새로운 알림 개수를 조회합니다.'])
     def get(self, request, user_id):
         try:
@@ -219,7 +193,20 @@ class NotificationView(APIView):
         return Response({
             "notifications_count": notifications_count,
         }, status=status.HTTP_200_OK)
-
+        
+        
+class PatchNotificationView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get_suggest_from_user(self, user, suggest_id):
+        if user.is_senior:
+            senior = SeniorUser.objects.get(user=user)
+            suggest = Suggest.objects.get(id=suggest_id, senior=senior)
+        else:
+            enterprise = EnterpriseUser.objects.get(user=user)
+            suggest = Suggest.objects.get(id=suggest_id, enterprise=enterprise)   
+        return suggest 
+    
     @swagger_auto_schema(tags=['채용 제안 열람 여부를 갱신합니다.'])
     def patch(self, request):
         user_id = request.data.get('user_id')
@@ -250,6 +237,34 @@ class NotificationView(APIView):
             "message": "채용 제안 열람 여부가 성공적으로 갱신되었습니다."
         }, status=status.HTTP_200_OK)
         
+
+class GetSuggestDetailView(APIView):
+    permission_classes = [AllowAny]
+    
+    @swagger_auto_schema(tags=['채용 제안의 상세 내용을 조회합니다.'])
+    def get(self, request, suggest_id):
+        try:
+            suggest = Suggest.objects.get(id=suggest_id)
+        except ObjectDoesNotExist:
+            return Response({"error": "Suggest Not Found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = {
+            "suggest_id": suggest.id,
+            "commute_type": suggest.commute_type,
+            "start_year_month": suggest.start_year_month,
+            "end_year_month": suggest.end_year_month,
+            "pay": suggest.pay,
+            "duration": suggest.duration,
+            "job_description": suggest.job_description,
+            "is_cancelled": suggest.is_cancelled,
+            "is_accepted": suggest.is_accepted,
+            "is_paid": suggest.is_paid,
+            "is_expired": suggest.is_expired,
+            "company": suggest.enterprise.company,
+            "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    
     
 class PaymentRequestView(APIView):
     permission_classes = [AllowAny]

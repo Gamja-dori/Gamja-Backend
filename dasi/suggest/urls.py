@@ -2,15 +2,15 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('create/', SuggestCreateView.as_view()),
+    path('create/', CreateSuggestView.as_view()),
     path('enterprise/<int:user_id>/', GetSeniorListView.as_view()), 
     path('enterprise/<int:user_id>/paid/', GetPaidSeniorListView.as_view()), 
     path('enterprise/<int:user_id>/unpaid/', GetUnpaidSeniorListView.as_view()), 
-    path('senior/<int:user_id>/read/', GetReadEnterpriseListView.as_view()), 
-    path('senior/<int:user_id>/unread/', GetUnreadEnterpriseListView.as_view()), 
+    path('notifications/enterprise/<int:user_id>/', GetEnterpriseNotificationsView.as_view()), 
+    path('notifications/senior/<int:user_id>/', GetSeniorNotificationsView.as_view()), 
+    path('notifications/count/<int:user_id>/', GetNotificationCountView.as_view()),
+    path('notifications/', PatchNotificationView.as_view()),
     path('<int:suggest_id>/', GetSuggestDetailView.as_view()),
-    path('notifications/<int:user_id>/', NotificationView.as_view()),
-    path('notifications/', NotificationView.as_view()),
     path('pay/', PaymentRequestView.as_view()),
     path('pay/approve/', PaymentApproveView.as_view()),
     path('pay/fail/', PaymentFailView.as_view()),
