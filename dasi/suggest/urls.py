@@ -11,6 +11,8 @@ urlpatterns = [
     path('notifications/count/<int:user_id>/', GetNotificationCountView.as_view()),
     path('notifications/', PatchNotificationView.as_view()),
     path('<int:suggest_id>/', GetSuggestDetailView.as_view()),
+    path('progress/<int:suggest_id>/', GetProgressView.as_view()),
+    path('progress/update/', UpdateProgressView.as_view()),
     path('pay/', PaymentRequestView.as_view()),
     path('pay/approve/', PaymentApproveView.as_view()),
     path('pay/fail/', PaymentFailView.as_view()),
