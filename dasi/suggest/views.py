@@ -172,9 +172,9 @@ class GetSuggestDetailView(APIView):
         
         response_data = {
             "suggest_id": suggest.id,
+            "commute_type": suggest.commute_type,
             "start_year_month": suggest.start_year_month,
             "end_year_month": suggest.end_year_month,
-            "suggest_id": suggest.id,
             "pay": suggest.pay,
             "duration": suggest.duration,
             "job_description": suggest.job_description,
@@ -182,6 +182,8 @@ class GetSuggestDetailView(APIView):
             "is_accepted": suggest.is_accepted,
             "is_paid": suggest.is_paid,
             "is_expired": suggest.is_expired,
+            "company": suggest.enterprise.company,
+            "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url
         }
         return Response(response_data, status=status.HTTP_200_OK)
     
