@@ -293,9 +293,9 @@ class PaymentRequestView(APIView):
             "quantity": "1",                               # 상품 수량
             "total_amount": str(payment.total_amount),     # 상품 총액
             "tax_free_amount": "0",                        # 상품 비과세 금액
-            "approval_url": "http://localhost:8000/pay/approve/", # 결제 성공 시 이동할 url
-            "fail_url": "http://localhost:8000/pay/fail/",        # 결제 실패 시 이동할 url            
-            "cancel_url": "http://localhost:8000/pay/cancel/"     # 결제 취소 시 이동할 url
+            "approval_url": "https://dasi-expert.com", # 결제 성공 시 이동할 url
+            "fail_url": "https://dasi-expert.com",        # 결제 실패 시 이동할 url            
+            "cancel_url": "https://dasi-expert.com/"     # 결제 취소 시 이동할 url
         } 
         
         # 카카오페이 서버에 결제 요청 전송
