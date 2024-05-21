@@ -30,7 +30,7 @@ class Payment(models.Model):
     
     # 응답에서 받아올 값
     aid = models.CharField(max_length=20, default='')                  # 요청 고유 번호
-    tid = models.CharField(max_length=20, unique=True, default='')     # 결제 고유 번호
+    tid = models.CharField(max_length=20, default='')     # 결제 고유 번호
     payment_method_type = models.CharField(max_length=10, default='')  # 결제 수단
     card_info = models.TextField(null=True, blank=True, default='')    # 결제 상세 정보
     amount_info = models.TextField(null=True, blank=True, default='')  # 금액 상세 
