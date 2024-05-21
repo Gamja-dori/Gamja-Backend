@@ -189,41 +189,62 @@ class GetSuggestDetailView(APIView):
 class NotificationView(APIView):
     permission_classes = [AllowAny]
     
-    @swagger_auto_schema(tags=['시니어 사용자의 새로운 알림 개수를 조회합니다.'])
+    def get_suggest_from_user(self, user, suggest_id):
+        if user.is_senior:
+            senior = SeniorUser.objects.get(user=user)
+            suggest = Suggest.objects.get(id=suggest_id, senior=senior)
+        else:
+            enterprise = EnterpriseUser.objects.get(user=user)
+            suggest = Suggest.objects.get(id=suggest_id, enterprise=enterprise)   
+        return suggest 
+    
+    @swagger_auto_schema(tags=['새로운 알림 개수를 조회합니다.'])
     def get(self, request, user_id):
         try:
-            senior = SeniorUser.objects.get(user_id=user_id)
-        except SeniorUser.DoesNotExist:
-            return Response({"error": "Senior user not found"}, status=status.HTTP_404_NOT_FOUND)
+            user = User.objects.get(id=user_id)
+            if user.is_senior:
+                senior = SeniorUser.objects.get(user=user)
+            else:
+                enterprise = EnterpriseUser.objects.get(user=user)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-        notifications_count = Suggest.objects.filter(senior=senior, is_read=False).count() 
+        if user.is_senior:
+            notifications_count = Suggest.objects.filter(senior=senior, is_senior_read=False).count() 
+        else:
+            notifications_count = Suggest.objects.filter(enterprise=enterprise, is_enterprise_read=False).count() 
         
         return Response({
             "notifications_count": notifications_count,
         }, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(tags=['시니어 사용자의 채용 제안 열람 여부를 갱신합니다.'])
+    @swagger_auto_schema(tags=['채용 제안 열람 여부를 갱신합니다.'])
     def patch(self, request):
         user_id = request.data.get('user_id')
         suggest_id = request.data.get('suggest_id')
-
-        if not user_id or not suggest_id:
-            return Response({"error": "User ID and Suggest ID are required"}, status=status.HTTP_400_BAD_REQUEST)
+        is_read = request.data.get('is_read')
+        
+        if user_id is None or suggest_id is None or is_read is None:
+            return Response({"error": "User ID, Suggest ID, is_read field are required"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            senior = SeniorUser.objects.get(user_id=user_id)
-            suggest = Suggest.objects.get(id=suggest_id, senior=senior)
-        except SeniorUser.DoesNotExist:
-            return Response({"error": "Senior user not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Suggest.DoesNotExist:
-            return Response({"error": "Suggest not found"}, status=status.HTTP_404_NOT_FOUND)
+            user = User.objects.get(id=user_id)
+            suggest = self.get_suggest_from_user(user, suggest_id) 
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
-        suggest.is_read = True # 열람 여부 갱신
+        # 열람 여부 갱신
+        if user.is_senior:
+            suggest.is_senior_read = is_read
+            response_data = suggest.is_senior_read
+        else:
+            suggest.is_enterprise_read = is_read 
+            response_data = suggest.is_enterprise_read
         suggest.save()
 
         return Response({
             "suggest_id": suggest.id,
-            "is_read": suggest.is_read,
+            "is_read": response_data,
             "message": "채용 제안 열람 여부가 성공적으로 갱신되었습니다."
         }, status=status.HTTP_200_OK)
         
