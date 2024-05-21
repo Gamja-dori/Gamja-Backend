@@ -69,15 +69,19 @@ class BaseListView(APIView):
 class GetSeniorListView(BaseListView):
     model = EnterpriseUser
     filter_field = 'enterprise'
-    suggest_filter = None
+    is_paid = None
     
     def get(self, request, user_id):
         suggests = self.get_suggests_list(user_id)
         if suggests is None:
             return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
         
-        if self.suggest_filter:
-            suggests = suggests.filter(**self.suggest_filter)
+        if self.is_paid is None:
+            pass
+        elif self.is_paid: 
+            suggests = suggests.filter(progress='is_paid')
+        else:
+            suggests = Suggest.objects.exclude(progress='is_paid')
         
         response_data = {
             "suggests": [
@@ -92,8 +96,7 @@ class GetSeniorListView(BaseListView):
                     "date": suggest.resume.created_at,
                     "commute_type": suggest.resume.commute_type, 
                     "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
-                    "is_accepted": suggest.is_accepted,
-                    "is_paid": suggest.is_paid,
+                    "progress": suggest.progress
                 } 
                 for suggest in suggests
             ]
@@ -102,7 +105,7 @@ class GetSeniorListView(BaseListView):
     
 
 class GetPaidSeniorListView(GetSeniorListView):
-    suggest_filter = {'is_paid': True}
+    is_paid = True
 
     @swagger_auto_schema(tags=['기업 사용자의 결제 완료된 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
@@ -110,7 +113,7 @@ class GetPaidSeniorListView(GetSeniorListView):
 
 
 class GetUnpaidSeniorListView(GetSeniorListView):
-    suggest_filter = {'is_paid': False}
+    is_paid = False
     
     @swagger_auto_schema(tags=['기업 사용자의 결제되지 않은 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
@@ -133,9 +136,7 @@ class GetEnterpriseNotificationsView(BaseListView):
                     "suggest_id": suggest.id,
                     "resume_id": suggest.resume.id,
                     "name": suggest.senior.name,
-                    "is_accepted": suggest.is_accepted,
-                    "is_cancelled": suggest.is_cancelled,
-                    "is_paid": suggest.is_paid,
+                    "progress": suggest.progress,
                     "is_read": suggest.is_enterprise_read,
                     "profile_image": "https://api.dasi-expert.com" + suggest.senior.user.profile_image.url,
                 }
@@ -161,8 +162,7 @@ class GetSeniorNotificationsView(BaseListView):
                     "suggest_id": suggest.id,
                     "resume_id": suggest.resume.id,
                     "company": suggest.enterprise.company,
-                    "is_cancelled": suggest.is_cancelled,
-                    "is_paid": suggest.is_paid,
+                    "progress": suggest.progress,
                     "is_read": suggest.is_senior_read,
                     "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url,
                 }
@@ -257,15 +257,67 @@ class GetSuggestDetailView(APIView):
             "pay": suggest.pay,
             "duration": suggest.duration,
             "job_description": suggest.job_description,
-            "is_cancelled": suggest.is_cancelled,
-            "is_accepted": suggest.is_accepted,
-            "is_paid": suggest.is_paid,
+            "progress": suggest.progress,
             "is_expired": suggest.is_expired,
             "company": suggest.enterprise.company,
             "profile_image": "https://api.dasi-expert.com" + suggest.enterprise.user.profile_image.url
         }
         return Response(response_data, status=status.HTTP_200_OK)
     
+
+class GetProgressView(APIView):
+    permission_classes = [AllowAny]   
+    
+    @swagger_auto_schema(tags=['채용 제안의 상태를 조회합니다.'])
+    def get(self, request, suggest_id):
+        try:
+            suggest = Suggest.objects.get(id=suggest_id) 
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "suggest_id": suggest.id,
+            "progress": suggest.progress,
+            "is_senior_read": suggest.is_senior_read,
+            "is_enterprise_read": suggest.is_enterprise_read,
+            "message": "채용 제안의 상태를 성공적으로 조회했습니다."
+        }, status=status.HTTP_200_OK)
+        
+
+class UpdateProgressView(APIView):
+    permission_classes = [AllowAny]   
+    
+    @swagger_auto_schema(tags=['채용 제안의 상태를 변경합니다.'])
+    def patch(self, request):
+        try:
+            suggest_id = request.data.get('suggest_id')
+            suggest = Suggest.objects.get(id=suggest_id) 
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        progress = request.data.get('progress')
+        if progress not in ['is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted']:
+            return Response({"error": "Progress is invalid. Possible choices are 'is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted'."}
+                            , status=status.HTTP_400_BAD_REQUEST)
+        
+        # 상태 설정 및 사용자의 읽은 상태 변경    
+        suggest.progress = progress
+        if progress in ['is_accepted', 'is_declined', 'is_paid']:
+            suggest.is_senior_read = True
+            suggest.is_enterprise_read = False 
+        elif progress == 'is_cancelled':
+            suggest.is_senior_read = False  
+            suggest.is_enterprise_read  = True 
+        suggest.save()
+
+        return Response({
+            "suggest_id": suggest.id,
+            "progress": suggest.progress,
+            "is_senior_read": suggest.is_senior_read,
+            "is_enterprise_read": suggest.is_enterprise_read,
+            "message": "채용 제안의 상태가 성공적으로 변경되었습니다."
+        }, status=status.HTTP_200_OK)
+  
     
 class PaymentRequestView(APIView):
     permission_classes = [AllowAny]
@@ -305,7 +357,7 @@ class PaymentRequestView(APIView):
             if 'tid' in request.session:
                 del request.session['tid']
             tid = response.json()['tid']  
-            request.session['tid'] = tid
+            request.session['tid'] = tid 
             serializer.update_tid(tid, payment.id)
             
             # 결제 페이지 url로 redirect
@@ -374,7 +426,12 @@ class GetIsPaidView(APIView):
         except Suggest.DoesNotExist:
             return Response({"error": "Suggest not found"}, status=status.HTTP_404_NOT_FOUND)
         
+        if suggest.progress == 'is_paid':
+            res = True
+        else:
+            res = False
+            
         return Response({
-            "is_paid": suggest.is_paid
+            "is_paid": res
         }, status=status.HTTP_200_OK) 
         

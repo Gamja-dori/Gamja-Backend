@@ -13,9 +13,7 @@ class Suggest(models.Model):
     job_description = models.TextField()
     is_senior_read = models.BooleanField(default=False)      # 시니어 사용자의 제안 열람 여부
     is_enterprise_read = models.BooleanField(default=True)   # 기업 사용자의 제안 열람 여부
-    is_cancelled = models.BooleanField(default=False) # 채용 취소 여부
-    is_accepted = models.BooleanField(default=False)  # 제안 수락 여부
-    is_paid = models.BooleanField(default=False)      # 결제 여부
+    progress = models.CharField(max_length=20, default='is_pending')
     is_expired = models.BooleanField(default=False)   # 계약 만료 여부
     
     class Meta: 

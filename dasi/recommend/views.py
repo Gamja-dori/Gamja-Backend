@@ -1,7 +1,6 @@
 from .models import *
 from .serializers import *
 from resume.models import Resume
-from resume.views import checkResumeExistence
 from resume.serializers import ResumeSerializer
 from users.models import User, SeniorUser
 from .recommendation import search
