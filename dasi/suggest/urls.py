@@ -14,8 +14,6 @@ urlpatterns = [
     path('progress/<int:suggest_id>/', GetProgressView.as_view()),
     path('progress/update/', UpdateProgressView.as_view()),
     path('pay/', PaymentRequestView.as_view()),
-    path('pay/approve/', PaymentApproveView.as_view()),
-    path('pay/fail/', PaymentFailView.as_view()),
-    path('pay/cancel/', PaymentCancelView.as_view()),
+    path('pay/approve/<int:payment_id>/<str:pg_token>/', PaymentApproveView.as_view()),
     path('pay/<int:suggest_id>/', GetIsPaidView.as_view()),    
 ]
