@@ -344,8 +344,8 @@ class PaymentRequestView(APIView):
             "quantity": "1",                               # 상품 수량
             "total_amount": str(payment.total_amount),     # 상품 총액
             "tax_free_amount": "0",                        # 상품 비과세 금액
-            "approval_url": f"http://localhost:3000/suggestion/payment/{payment.suggest.resume.id}/{payment.suggest.id}", # 결제 성공 시 이동할 url
-            "fail_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}/",  # 결제 실패 시 이동할 url            
+            "approval_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}/{payment.suggest.id}", # 결제 성공 시 이동할 url
+            "fail_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}",  # 결제 실패 시 이동할 url            
             "cancel_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}/{payment.suggest.id}" # 결제 취소 시 이동할 url
         } 
         
@@ -390,6 +390,7 @@ class PaymentApproveView(APIView):
         
         response = requests.post(URL, headers=headers, json=params)
         response = json.loads(response.text)
+        
         if "cid" in response:
             serializer = PaymentSerializer(data=response)
             serializer.update(response, payment.id)
