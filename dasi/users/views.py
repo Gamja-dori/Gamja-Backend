@@ -212,6 +212,27 @@ class ProfileImageView(APIView):
             return Response({"error": str(e)}, status=500)
 
 
+class UserSecretView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['채용 성사 후 시니어 사용자의 개인정보를 조회합니다.'])
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+            senior = SeniorUser.objects.get(user_id=id)
+        except ObjectDoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND) 
+        
+        return Response(
+            {
+                "name": senior.name,
+                "phone_number": senior.phone_number,
+                "email": user.email
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    
 class CheckDuplicateView(APIView):
     permission_classes = [AllowAny]
 

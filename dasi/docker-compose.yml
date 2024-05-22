@@ -7,9 +7,13 @@ services:
       - "80:80"
     volumes:
       - static:/usr/src/app/static
+      - ./static/drf-yasg:/usr/src/app/static/drf-yasg
       - media:/usr/src/app/media
     depends_on: 
       - web
+    logging:
+      options:
+        max-size: 10m
 
   web:
     build:
@@ -28,6 +32,9 @@ services:
         limits:
           cpus: '0.5'  # CPU 코어의 50%만 사용
           memory: '512M'  # 메모리 제한
+    logging:
+      options:
+        max-size: 10m
 
 volumes:
   static:
