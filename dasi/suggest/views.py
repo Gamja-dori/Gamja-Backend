@@ -360,12 +360,8 @@ class PaymentRequestView(APIView):
             request.session['tid'] = tid 
             serializer.update_tid(tid, payment.id)
             
-            # 결제 페이지 url로 redirect
-            if device == "mobile":
-                next_url = response.json()['next_redirect_mobile_url'] 
-            else:
-                next_url = response.json()['next_redirect_pc_url'] 
-            return redirect(next_url)
+            response = json.loads(response.text)
+            return Response(response)
         except:
             data = {
                 "message": '결제 요청에 실패했습니다.',
