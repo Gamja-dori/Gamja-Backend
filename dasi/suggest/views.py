@@ -352,11 +352,8 @@ class PaymentRequestView(APIView):
         # 카카오페이 서버에 결제 요청 전송
         response = requests.post(URL, headers=headers, json=params) 
         try:       
-            # 결제 승인 시 사용할 tid를 세션에 저장
-            if 'tid' in request.session:
-                del request.session['tid']
+            # 결제 승인 시 사용할 tid 저장
             tid = response.json()['tid']  
-            request.session['tid'] = tid 
             serializer = PaymentSerializer(data=request.data)
             serializer.update_tid(tid, payment.id)
             
@@ -385,7 +382,7 @@ class PaymentApproveView(APIView):
         }        
         params = {
             "cid": "TC0ONETIME",            
-            "tid": request.session['tid'],
+            "tid": payment.tid,
             "partner_order_id": str(payment.id),
             "partner_user_id": str(payment.suggest.enterprise.user_id),
             "pg_token": pg_token
