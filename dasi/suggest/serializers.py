@@ -27,20 +27,26 @@ class SuggestSerializer(serializers.ModelSerializer):
         return suggest  
     
     
-class PaymentSerializer(serializers.ModelSerializer):        
+class CreatePaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = ['suggest_id', 'item_name', 'total_amount']
         
     def create(self, validated_data):
-        user = EnterpriseUser.objects.get(user_id=validated_data['user_id'])
+        suggest = Suggest.objects.get(id=validated_data['suggest_id'])
         
         payment = Payment.objects.create(
-            user=user,
+            suggest=suggest,
             item_name=validated_data['item_name'],
             total_amount=validated_data['total_amount']
         )
         return payment
+    
+    
+class PaymentSerializer(serializers.ModelSerializer):        
+    class Meta:
+        model = Payment
+        fields = '__all__'
 
     def update_tid(self, tid, payment_id):
         try:

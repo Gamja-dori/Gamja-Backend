@@ -3,7 +3,7 @@ import environ, os, requests, json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import *
@@ -320,17 +320,16 @@ class UpdateProgressView(APIView):
   
     
 class PaymentRequestView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     
     @swagger_auto_schema(tags=['카카오페이 결제 요청을 전송합니다.'])
     def post(self, request):
-        serializer = PaymentSerializer(data=request.data)
+        serializer = CreatePaymentSerializer(data=request.data)
         
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         payment = serializer.create(validated_data=request.data)
-        device = request.data.get("device")
         
         URL = 'https://open-api.kakaopay.com/online/v1/payment/ready'
         headers = {
@@ -340,14 +339,14 @@ class PaymentRequestView(APIView):
         params = {
             "cid": "TC0ONETIME",                           # 테스트용 코드
             "partner_order_id": str(payment.id),           # 주문번호
-            "partner_user_id": str(payment.user.user_id),  # 유저 아이디
+            "partner_user_id": str(payment.suggest.enterprise.user_id), # 유저 아이디
             "item_name": str(payment.item_name),           # 상품명
             "quantity": "1",                               # 상품 수량
             "total_amount": str(payment.total_amount),     # 상품 총액
             "tax_free_amount": "0",                        # 상품 비과세 금액
-            "approval_url": "https://dasi-expert.com", # 결제 성공 시 이동할 url
-            "fail_url": "https://dasi-expert.com",        # 결제 실패 시 이동할 url            
-            "cancel_url": "https://dasi-expert.com/"     # 결제 취소 시 이동할 url
+            "approval_url": "https://dasi-expert.com/suggestion/payment/complete", # 결제 성공 시 이동할 url
+            "fail_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}/{payment.suggest.id}",  # 결제 실패 시 이동할 url            
+            "cancel_url": f"https://dasi-expert.com/suggestion/payment/{payment.suggest.resume.id}/{payment.suggest.id}" # 결제 취소 시 이동할 url
         } 
         
         # 카카오페이 서버에 결제 요청 전송
@@ -358,14 +357,12 @@ class PaymentRequestView(APIView):
                 del request.session['tid']
             tid = response.json()['tid']  
             request.session['tid'] = tid 
+            serializer = PaymentSerializer(data=request.data)
             serializer.update_tid(tid, payment.id)
             
-            # 결제 페이지 url로 redirect
-            if device == "mobile":
-                next_url = response.json()['next_redirect_mobile_url'] 
-            else:
-                next_url = response.json()['next_redirect_pc_url'] 
-            return redirect(next_url)
+            response = json.loads(response.text)
+            response["payment_id"] = payment.id
+            return Response(response)
         except:
             data = {
                 "message": '결제 요청에 실패했습니다.',
@@ -378,8 +375,8 @@ class PaymentRequestView(APIView):
 class PaymentApproveView(APIView):
     permission_classes = [AllowAny]
     
-    def get(self, request):
-        payment = Payment.objects.get(tid=request.session['tid'])
+    def get(self, request, payment_id, pg_token):
+        payment = Payment.objects.get(id=payment_id)
         
         URL = 'https://open-api.kakaopay.com/online/v1/payment/approve'
         headers = {
@@ -390,30 +387,22 @@ class PaymentApproveView(APIView):
             "cid": "TC0ONETIME",            
             "tid": request.session['tid'],
             "partner_order_id": str(payment.id),
-            "partner_user_id": str(payment.user.user_id),
-            "pg_token": request.GET.get("pg_token")
+            "partner_user_id": str(payment.suggest.enterprise.user_id),
+            "pg_token": pg_token
         }         
         
         response = requests.post(URL, headers=headers, json=params)
         response = json.loads(response.text)
         if "cid" in response:
-            PaymentSerializer.update(request.data, payment.id)      
+            serializer = PaymentSerializer(data=response)
+            serializer.update(response, payment.id)
+            suggest = payment.suggest
+            suggest.progress = "is_paid" 
+            suggest.is_senior_read = True
+            suggest.is_enterprise_read = False  
+            suggest.save()    
         
         return Response(response)
-    
-
-class PaymentFailView(APIView):
-    permission_classes = [AllowAny]
-    
-    def get(self, request):
-        return Response(status=200)
-    
-    
-class PaymentCancelView(APIView):
-    permission_classes = [AllowAny]
-    
-    def get(self, request):
-        return Response(status=200)
     
 
 class GetIsPaidView(APIView):

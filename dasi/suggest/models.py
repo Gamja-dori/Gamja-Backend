@@ -22,7 +22,7 @@ class Suggest(models.Model):
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('users.EnterpriseUser', on_delete=models.CASCADE, default=-1)
+    suggest = models.ForeignKey(Suggest, on_delete=models.CASCADE)
     item_name = models.CharField(max_length=100)                       # 상품명
     total_amount = models.IntegerField()                               # 금액
     
