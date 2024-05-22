@@ -3,7 +3,7 @@ import environ, os, requests, json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import *
@@ -320,7 +320,7 @@ class UpdateProgressView(APIView):
   
     
 class PaymentRequestView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     
     @swagger_auto_schema(tags=['카카오페이 결제 요청을 전송합니다.'])
     def post(self, request):
