@@ -39,9 +39,10 @@ class EnterpriseUser(models.Model):
 class Review(models.Model):
     reviewer = models.ForeignKey(EnterpriseUser, on_delete=models.PROTECT)
     senior = models.ForeignKey(SeniorUser, on_delete=models.CASCADE)
-    score = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
+    score = models.DecimalField(max_digits=1, decimal_places=1, default=0.0)
+    tags = models.TextField(null=True, blank=True, default='[]')
+    comment = models.TextField(null=True, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
-    comment = models.TextField()
 
     class Meta:
         db_table = 'reviews'
