@@ -74,3 +74,19 @@ class EnterpriseSerializer(serializers.ModelSerializer):
             is_certified=False
         )
         return enterprise
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'suggest', 'senior', 'reviewer', 'score', 'tags', 'comment']
+
+    def create(self, validated_data):
+        suggest_id = validated_data.get('suggest')
+        suggest = Suggest.objects.filter(id=suggest_id)[0]
+        senior_id = validated_data.get('senior')
+        senior = SeniorUser.objects.filter(user_id=senior_id)[0]
+        reviewer_id = validated_data.get('reviewer')
+        reviewer = EnterpriseUser.objects.filter(user_id=reviewer_id)[0]
+        review = Review.objects.create(suggest=suggest, senior=senior, reviewer=reviewer, score=validated_data.pop('score'), tags=validated_data.pop('tags'), comment=validated_data.pop('comment'))
+        review.save()
+        return review

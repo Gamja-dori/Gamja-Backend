@@ -1,5 +1,5 @@
 from .models import *
-from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer, ProjectSerializer, PortfolioSerializer, PerformanceSerializer, ResumeCardSerializer
+from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -7,6 +7,7 @@ from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from users.models import SeniorUser
 from django.core.exceptions import ObjectDoesNotExist
+from .create_senior_intro import create_intro;
 
 def checkUserExistence(user_id):
     try:
@@ -103,7 +104,7 @@ class SetDefaultResumeAPIView(APIView):
         if resume:
             serializer = FindResumeSerializer(resume, data=request.data, partial=True)
             if serializer.is_valid():
-                resumes = Resume.objects.filter(id=resume_id)
+                resumes = Resume.objects.filter(user_id=user_id)
                 for r in resumes:
                     r.is_default = False
                     r.save()
@@ -401,3 +402,25 @@ class CopyResumeAPIView(APIView):
                 )
                 return res
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+class CreateSeniorIntroAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['이력서를 바탕으로 전문가 소개를 생성합니다.'], request_body=ResumeSerializer)
+    def post(self, request, user_id, resume_id):
+        resume = checkResumeExistence(user_id, resume_id)
+        if resume:
+            serializer = ResumeSerializer(resume, data=request.data)
+            if serializer.is_valid():
+                createdIntro = create_intro(request.data)
+                res = Response(
+                    {
+                        "resume_id": resume_id,
+                        "introduction": createdIntro,
+                        "message": "전문가 소개가 성공적으로 생성되었습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND)

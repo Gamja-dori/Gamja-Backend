@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreateResumeAPIView, DeleteResumeAPIView, ChangeResumeTitleAPIView, SetDefaultResumeAPIView, SubmitResumeAPIView, EditResumeAPIView, GetResumeAPIView, GetResumeListAPIView, CreateResumeDetailAPIView, DeleteResumeDetailAPIView, ExtractPriorResumeAPIView, GetDefaultResumeAPIView, CopyResumeAPIView
+from .views import *
 
 urlpatterns = [
     path('create/', CreateResumeAPIView.as_view()),
@@ -14,7 +14,8 @@ urlpatterns = [
     path('list/<int:user_id>/', GetResumeListAPIView.as_view()),
     path('prior-resume/<int:user_id>/<int:resume_id>/', ExtractPriorResumeAPIView.as_view()),
     path('default-resume/<int:user_id>/', GetDefaultResumeAPIView.as_view()),
-    path('copy/', CopyResumeAPIView.as_view())
+    path('copy/', CopyResumeAPIView.as_view()),
+    path('senior-intro/<int:user_id>/<int:resume_id>/', CreateSeniorIntroAPIView.as_view())   
 ]
 
 
