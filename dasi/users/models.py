@@ -1,5 +1,6 @@
 from django.db import models
 from resume.models import Resume
+from suggest.models import Suggest
 from django.contrib.auth.models import AbstractUser, BaseUserManager
     
 class User(AbstractUser):
@@ -37,11 +38,13 @@ class EnterpriseUser(models.Model):
 
 
 class Review(models.Model):
+    suggest = models.ForeignKey(Suggest, null=True, on_delete=models.PROTECT) # 채용제안에 연결된 이력서를 통해 직무 정보 가져오기
     reviewer = models.ForeignKey(EnterpriseUser, on_delete=models.PROTECT)
     senior = models.ForeignKey(SeniorUser, on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=2, decimal_places=1, default=0.0)
+    tags = models.TextField(null=True, blank=True, default='[]')
+    comment = models.TextField(null=True, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
-    comment = models.TextField()
 
     class Meta:
         db_table = 'reviews'

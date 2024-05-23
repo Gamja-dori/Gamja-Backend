@@ -15,5 +15,8 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('check/<str:username>/', CheckDuplicateView.as_view(), name='check_duplicate'),
+    path('review/list/<int:senior_id>/', GetReviewListView().as_view()),
+    path('review/create/', CreateReviewView().as_view()),
+    path('review/delete/<int:senior_id>/<int:review_id>/', DeleteReviewView().as_view()),
 ]
 

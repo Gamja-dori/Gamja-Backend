@@ -243,3 +243,102 @@ class CheckDuplicateView(APIView):
             return Response({True}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({False}, status=status.HTTP_200_OK)
+        
+def checkUserExistence(user_id):
+    try:
+        user = SeniorUser.objects.get(user_id=user_id)
+    except ObjectDoesNotExist:
+        return False
+    return user
+
+def checkReviewExistence(user_id, review_id):
+    user = checkUserExistence(user_id)
+    if user:
+        try:
+            review = Review.objects.get(id=review_id, senior=user)
+        except ObjectDoesNotExist:
+            return False
+        return review
+    return False
+
+class GetReviewListView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['사용자의 리뷰 목록을 조회합니다.'])
+    def get(self, request, senior_id):
+        senior = checkUserExistence(senior_id)
+        if senior:
+            reviews = Review.objects.filter(senior=senior)
+            review_list = []
+            avg_score = 0
+            for r in reviews:
+                user = User.objects.get(id=r.reviewer.user_id)
+                reviewer = EnterpriseUser.objects.get(user=user)
+                suggest = Suggest.objects.get(id=r.suggest.id)
+                resume = Resume.objects.get(id=suggest.resume.id)
+                avg_score += r.score
+                review_list.append({
+                    "review_id": r.id,
+                    "reviewer_id": r.reviewer.user_id,
+                    "reviewer_name": reviewer.company,
+                    "reviewer_image": "https://api.dasi-expert.com" + user.profile_image.url,
+                    "job_group": resume.job_group,
+                    "job_role": resume.job_role,
+                    "start_year_month": suggest.start_year_month,
+                    "end_year_month": suggest.end_year_month,
+                    "score": r.score,
+                    "created_at": r.created_at,
+                    "comment": r.comment,
+                    "tags": r.tags
+                })
+            avg_score = round(avg_score / len(reviews), 1)
+            res = Response(
+                {
+                    "senior_id": senior_id,
+                    "reviews": review_list,
+                    "average_score": avg_score,
+                    "message": "리뷰 목록을 성공적으로 조회했습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response({"error": "Senior not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+class CreateReviewView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(tags=['새 리뷰를 작성합니다.'], request_body=ReviewSerializer)
+    def post(self, request):
+        senior_id = request.data.get('senior')
+        user = checkUserExistence(senior_id)
+        if user:
+            serializer = ReviewSerializer(data=request.data)
+            if serializer.is_valid():
+                review = serializer.create(validated_data=request.data)
+                res = Response(
+                    {
+                        "review_id": review.id,
+                        "message": "리뷰가 성공적으로 생성되었습니다."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                return res
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Senior not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class DeleteReviewView(APIView):
+    permission_classes = [AllowAny] 
+
+    @swagger_auto_schema(tags=['리뷰를 삭제합니다.'])
+    def delete(self, request, senior_id, review_id):
+        review = checkReviewExistence(senior_id, review_id)
+        if review:
+            review.delete()
+            res = Response(
+                {
+                    "message": "리뷰가 성공적으로 삭제되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)

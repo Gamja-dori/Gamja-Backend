@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreateResumeAPIView, DeleteResumeAPIView, ChangeResumeTitleAPIView, SetDefaultResumeAPIView, SubmitResumeAPIView, EditResumeAPIView, GetResumeAPIView, GetResumeListAPIView, CreateResumeDetailAPIView, DeleteResumeDetailAPIView, ExtractPriorResumeAPIView, GetDefaultResumeAPIView, CopyResumeAPIView, CreateSeniorIntroAPIView
+from .views import *
 
 urlpatterns = [
     path('create/', CreateResumeAPIView.as_view()),
