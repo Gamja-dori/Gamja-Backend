@@ -104,7 +104,7 @@ class SetDefaultResumeAPIView(APIView):
         if resume:
             serializer = FindResumeSerializer(resume, data=request.data, partial=True)
             if serializer.is_valid():
-                resumes = Resume.objects.filter(id=resume_id)
+                resumes = Resume.objects.filter(user_id=user_id)
                 for r in resumes:
                     r.is_default = False
                     r.save()
@@ -417,7 +417,7 @@ class CreateSeniorIntroAPIView(APIView):
                     {
                         "resume_id": resume_id,
                         "introduction": createdIntro,
-                        "message": "전문가 소개가 성공적으로 생성되었습니다.."
+                        "message": "전문가 소개가 성공적으로 생성되었습니다."
                     },
                     status=status.HTTP_200_OK,
                 )
