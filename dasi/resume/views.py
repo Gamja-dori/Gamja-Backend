@@ -1,5 +1,5 @@
 from .models import *
-from .serializers import CreateResumeSerializer, ChangeResumeTitleSerializer, FindResumeSerializer, ResumeSerializer, PriorResumeSerializer, CareerSerializer, EducationSerializer, ProjectSerializer, PortfolioSerializer, PerformanceSerializer, ResumeCardSerializer
+from .serializers import *
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
