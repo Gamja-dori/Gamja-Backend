@@ -406,11 +406,11 @@ class CopyResumeAPIView(APIView):
 class CreateSeniorIntroAPIView(APIView):
     permission_classes = [AllowAny]
 
-    @swagger_auto_schema(tags=['이력서를 바탕으로 전문가 소개를 생성합니다.'], request_body=ResumeSerializer)
+    @swagger_auto_schema(tags=['이력서를 바탕으로 전문가 소개를 생성합니다.'], request_body=ResumeIntroSerializer)
     def post(self, request, user_id, resume_id):
         resume = checkResumeExistence(user_id, resume_id)
         if resume:
-            serializer = ResumeSerializer(resume, data=request.data)
+            serializer = ResumeIntroSerializer(resume, data=request.data)
             if serializer.is_valid():
                 createdIntro = create_intro(request.data)
                 res = Response(
