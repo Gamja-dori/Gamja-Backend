@@ -60,7 +60,7 @@ class EnterpriseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EnterpriseUser
-        fields = ['name', 'phone_number', 'business_number', 'is_certified', 'user']
+        fields = ['name', 'phone_number', 'business_number', 'is_certified', 'user', 'company']
            
     def create(self, validated_data):
         user_data = validated_data.pop('user')
@@ -70,6 +70,7 @@ class EnterpriseSerializer(serializers.ModelSerializer):
             name=validated_data.pop('name'),
             phone_number=validated_data.pop('phone_number'),
             business_number=validated_data.pop('business_number'),
+            company=validated_data.pop('company'),
             is_certified=False
         )
         return enterprise
