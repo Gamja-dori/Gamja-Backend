@@ -296,7 +296,7 @@ class UpdateProgressView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         progress = request.data.get('progress')
-        if progress not in ['is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted']:
+        if progress not in ['is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted', 'is_reviewed']:
             return Response({"error": "Progress is invalid. Possible choices are 'is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted'."}
                             , status=status.HTTP_400_BAD_REQUEST)
         
@@ -307,6 +307,9 @@ class UpdateProgressView(APIView):
             suggest.is_enterprise_read = False 
         elif progress == 'is_cancelled':
             suggest.is_senior_read = False  
+            suggest.is_enterprise_read  = True 
+        elif progress == 'is_reviewed':
+            suggest.is_senior_read = True  
             suggest.is_enterprise_read  = True 
         suggest.save()
 
