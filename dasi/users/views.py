@@ -291,7 +291,10 @@ class GetReviewListView(APIView):
                     "comment": r.comment,
                     "tags": r.tags
                 })
-            avg_score = round(avg_score / len(reviews), 1)
+            if len(reviews) != 0:
+                avg_score = round(avg_score / len(reviews), 1)
+            else:
+                avg_score = 0
             res = Response(
                 {
                     "senior_id": senior_id,
