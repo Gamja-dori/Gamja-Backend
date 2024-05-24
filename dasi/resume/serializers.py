@@ -173,3 +173,12 @@ class ResumeCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
         fields = ['id', 'is_default', 'is_verified', 'career_year', 'commute_type', 'title', 'job_group', 'job_role', 'updated_at']
+
+class ResumeIntroSerializer(serializers.ModelSerializer):
+    careers = CareerSerializer(many=True)
+    educations = EducationSerializer(many=True)
+    projects = ProjectSerializer(many=True)
+    portfolios = PortfolioSerializer(many=True)
+    class Meta:
+        model = Resume
+        fields = ['keyword', 'job_group', 'job_role', 'career_year', 'skills', 'careers', 'educations', 'projects', 'portfolios']
