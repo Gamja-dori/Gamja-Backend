@@ -1,58 +1,81 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from konlpy.tag import Hannanum
+from elasticsearch import Elasticsearch
 from resume.models import *
 from users.models import *
 import numpy as np
 import pickle
-import nltk
-import re
+import re, json
 
-hannanum = Hannanum()
+es = Elasticsearch()
 
-def extract_keywords(text):
-    # 한글 키워드 추출
-    keywords = hannanum.nouns(text)
-    
-    # 영문 키워드 추출
-    eng_str = re.sub(r"[^a-zA-Z\s]", "", text) # 영문자 + 공백만 남기기
-    eng_lower = eng_str.lower()
-    eng_keywords = nltk.word_tokenize(eng_lower)
-    return " ".join(keywords + eng_keywords)  # 단어 리스트를 다시 문자열로 변환하여 반환
+es.indices.delete(index='resumes') 
+es.indices.create(
+    index='resumes', 
+    body={ 
+  "settings": {
+    "analysis": { 
+        "analyzer": {
+            "my_analyzer": {
+            "type": "custom",
+            "tokenizer": "nori_tokenizer",
+            "filter": ["nori_filter", "stop_filter"],
+            "char_filter": ["html_strip"]
+            }
+        },
+        "filter": {
+          "nori_filter": {
+            "type": "nori_part_of_speech",
+            "stoptags": [
+                "E", "IC", "J", "MAG", "MAJ",
+                "MM", "SP", "SSC", "SSO", "SC",
+                "SE", "XPN", "XSA", "XSN", "XSV",
+                "UNA", "NA", "VSV"
+            ]
+          },
+          "stop_filter": {
+            "type": "stop",
+            "stopwords": ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
+                         '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
+                         '기여', '협력', '활동', '향상', '성장', '발전']  
+            }
+        }
+    }},
+      "mappings": {
+            "properties": {
+                    "id": {
+                        "type": "long"
+                    },
+                    "content": {
+                        "type": "text",
+                        "analyzer": "my_analyzer"
+                    }
+                }
+        }
+})
+
+'''
+es.delete_by_query(
+    index='resumes',
+    body={
+        "query": {
+                "match_all": {}
+        }
+    }
+)'''
 
 
+'''
 def calculate(a, b):
     # 직무와 직접적으로 관련 없는 stop words
     general_stopwords = ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
                          '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
                          '기여', '협력', '활동', '향상', '성장', '발전']
+'''
 
-    # 두 문서 벡터화
-    vectorizer = TfidfVectorizer(stop_words=general_stopwords)
-    tfidf_matrix = vectorizer.fit_transform([a, b])
-
-    # 첫 번째 문서와 두 번째 문서의 TF-IDF 벡터 추출
-    vector_a = tfidf_matrix[0]
-    vector_b = tfidf_matrix[1]
-
-    # 유사도 계산
-    similarity = np.dot(vector_a, vector_b.T).toarray()[0, 0]
-
-    # 유사도 보정
-    similarity *= 4
-
-    if similarity > 1:
-      similarity = 0.99
-
-    return similarity
-
-
-def calculate_similarity(project_overview, resumes):
-    # 업무 한 줄 소개로부터 키워드 추출
-    project_keywords = extract_keywords(project_overview)
-
-    # 이력서별로 유사도 계산
-    similarity_scores = []
+def index_datas(resumes):
+    body = ""
     for resume in resumes:
         # 이력서로부터 키워드 추출
         text = resume.job_role + ' ' + resume.keyword + ' ' + resume.introduction
@@ -74,20 +97,23 @@ def calculate_similarity(project_overview, resumes):
             for p in projects:
                 text += ' ' + p.project_name + ' ' + p.project_detail
         
-        resume_keywords = extract_keywords(text)
-        similarity = calculate(project_keywords, resume_keywords)
-        similarity_scores.append(similarity)
+        body += json.dumps({"index": {"_index": "resumes"}}) + '\n'
+        body += json.dumps({
+            "id": resume.id,
+            "content": text
+        }, ensure_ascii=False) + '\n' 
 
-    return similarity_scores
+    es.bulk(body) 
+    
+
+def get_final_score(score): 
+    k = 0.5
+    score = score / ( k + score ) 
+    final_score = round(score * 100) 
+    return final_score if final_score > 0 else 0 
 
 
-def get_final_score(score):
-    final_score = round(score * 100)
-    return final_score if final_score > 0 else 0
-
-
-def search(project_overview, resumes, comment_types, user_id):
-    final_scores = [0] * len(resumes)
+def search(project_overview, resumes, comment_types, user_id): 
     if user_id != -1:
         user = User.objects.get(id=user_id)
         if user.is_senior:
@@ -95,12 +121,40 @@ def search(project_overview, resumes, comment_types, user_id):
         else:
             member = EnterpriseUser.objects.get(user_id=user_id)
 
-    # 모든 이력서에 대해 검색어 점수 한 번에 계산
-    search_result = calculate_similarity(project_overview, resumes)
-
+    # 이력서 데이터 인덱싱
+    index_datas(resumes)
+    
+    # 검색
+    docs = es.search(index='resumes',
+        body={
+            "query": {
+                "match": {
+                    "content": project_overview
+                }
+            }
+        }
+    )
+    
+    # (점수, 이력서 번호, 코멘트)
+    results = dict()
+    
+    # 이력서 ID 리스트
+    id_list = []
+    print(docs)
+    for hit in docs['hits']["hits"]:
+        resume_id = hit["_source"]["id"]
+        id_list.append(resume_id)
+        similarity_score = hit["_score"]  
+        results[resume_id] = similarity_score
+    
+    resumes_cnt = docs['hits']['total']['value']
+    print(resumes_cnt, len(id_list))
+    
+    final_scores = [0] * len(id_list)
+    
     # 이력서마다 코멘트 추가
-    for i in range(len(resumes)):
-        score = search_result[i] # 점수
+    for i in range(len(id_list)):
+        score = results[id_list[i]] # 점수 
         final_score = get_final_score(score)
         comments = []
         
@@ -121,12 +175,14 @@ def search(project_overview, resumes, comment_types, user_id):
 
         # 경력
         if 4 in comment_types:
-            comments.append({"commentType": 4, "comments": [str(resumes[i].career_year)]})
+            resume = Resume.objects.get(id=id_list[i]) 
+            comments.append({"commentType": 4, "comments": [str(resume.career_year)]})
 
         # 최종 점수 산출
-        final_scores[i] = (final_score, resumes[i].id, comments)
+        final_scores[i] = [final_score, id_list[i], comments]
 
     # 점수가 높은 순으로 정렬
+    print(final_scores)
     final_resumes = sorted(final_scores, reverse=True) # (점수, 이력서 번호, 코멘트)
 
     # 결과 반환
