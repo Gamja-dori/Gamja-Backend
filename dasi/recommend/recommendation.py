@@ -10,69 +10,55 @@ import re, json
 
 es = Elasticsearch()
 
-es.indices.delete(index='resumes') 
-es.indices.create(
-    index='resumes', 
-    body={ 
-  "settings": {
-    "analysis": { 
-        "analyzer": {
-            "my_analyzer": {
-            "type": "custom",
-            "tokenizer": "nori_tokenizer",
-            "filter": ["nori_filter", "stop_filter"],
-            "char_filter": ["html_strip"]
-            }
-        },
-        "filter": {
-          "nori_filter": {
-            "type": "nori_part_of_speech",
-            "stoptags": [
-                "E", "IC", "J", "MAG", "MAJ",
-                "MM", "SP", "SSC", "SSO", "SC",
-                "SE", "XPN", "XSA", "XSN", "XSV",
-                "UNA", "NA", "VSV"
-            ]
-          },
-          "stop_filter": {
-            "type": "stop",
-            "stopwords": ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
-                         '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
-                         '기여', '협력', '활동', '향상', '성장', '발전']  
-            }
-        }
-    }},
-      "mappings": {
-            "properties": {
-                    "id": {
-                        "type": "long"
-                    },
-                    "content": {
-                        "type": "text",
-                        "analyzer": "my_analyzer"
-                    }
+def create_index():
+    es.indices.create(
+        index='resumes', 
+        body={ 
+    "settings": {
+        "analysis": { 
+            "analyzer": {
+                "my_analyzer": {
+                "type": "custom",
+                "tokenizer": "nori_tokenizer",
+                "filter": ["nori_filter", "stop_filter"],
+                "char_filter": ["html_strip"]
                 }
-        }
-})
+            },
+            "filter": {
+            "nori_filter": {
+                "type": "nori_part_of_speech",
+                "stoptags": [
+                    "E", "IC", "J", "MAG", "MAJ",
+                    "MM", "SP", "SSC", "SSO", "SC",
+                    "SE", "XPN", "XSA", "XSN", "XSV",
+                    "UNA", "NA", "VSV"
+                ]
+            },
+            "stop_filter": {
+                "type": "stop",
+                "stopwords": ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
+                            '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
+                            '기여', '협력', '활동', '향상', '성장', '발전']  
+                }
+            }
+        }},
+        "mappings": {
+                "properties": {
+                        "id": {
+                            "type": "long"
+                        },
+                        "content": {
+                            "type": "text",
+                            "analyzer": "my_analyzer"
+                        }
+                    }
+            }
+    })
+    
+    
+def delete_index():
+    es.indices.delete(index='resumes') 
 
-'''
-es.delete_by_query(
-    index='resumes',
-    body={
-        "query": {
-                "match_all": {}
-        }
-    }
-)'''
-
-
-'''
-def calculate(a, b):
-    # 직무와 직접적으로 관련 없는 stop words
-    general_stopwords = ['경험', '능력', '경력', '기술', '업무', '작업', '능숙', '풍부', '향상', '다양', '다양한', '완료', '관련', '특화', '역량', '보유', '담당',
-                         '성공', '성공적', '프로젝트', '분야', '활용', '스킬', '목표', '도전', '기록', '노력', '수행', '참여', '참가', '달성', '적용', '적응', '배움',
-                         '기여', '협력', '활동', '향상', '성장', '발전']
-'''
 
 def index_datas(resumes):
     body = ""
@@ -104,7 +90,20 @@ def index_datas(resumes):
         }, ensure_ascii=False) + '\n' 
 
     es.bulk(body) 
-    
+    es.indices.refresh(index='resumes')  # 인덱스 리프레시
+
+
+def delete_datas():
+    es.delete_by_query(
+    index='resumes',
+    body={
+        "query": {
+                "match_all": {}
+            }
+        }
+    )
+    es.indices.refresh(index='resumes')  # 인덱스 리프레시
+
 
 def get_final_score(score): 
     k = 0.5
@@ -121,9 +120,16 @@ def search(project_overview, resumes, comment_types, user_id):
         else:
             member = EnterpriseUser.objects.get(user_id=user_id)
 
-    # 이력서 데이터 인덱싱
-    index_datas(resumes)
+    # 이력서 생성
+    if not es.indices.exists(index='resumes'):
+        delete_index() 
+        create_index()
     
+    # 이력서 데이터 인덱싱
+    delete_datas()
+    if not es.count(index='resumes')['count']:
+        index_datas(resumes)
+          
     # 검색
     docs = es.search(index='resumes',
         body={
