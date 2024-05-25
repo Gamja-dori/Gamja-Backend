@@ -121,8 +121,7 @@ def search(project_overview, resumes, comment_types, user_id):
             member = EnterpriseUser.objects.get(user_id=user_id)
 
     # 이력서 생성
-    if not es.indices.exists(index='resumes'):
-        delete_index() 
+    if not es.indices.exists(index='resumes'): 
         create_index()
     
     # 이력서 데이터 인덱싱
