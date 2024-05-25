@@ -8,7 +8,10 @@ import numpy as np
 import pickle
 import re, json
 
-es = Elasticsearch()
+es = Elasticsearch(
+        hosts=['http://es:9200'],
+        http_auth=("elastic", "changeme")
+    )
 
 def create_index():
     es.indices.create(
