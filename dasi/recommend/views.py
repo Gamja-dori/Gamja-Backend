@@ -112,7 +112,7 @@ class SearchView(APIView):
         
         # 유사도 점수 계산
         search_result = search(query, resumes, comment_types, user_id)
-        
+
         response_data = {
             "resumes": []
         }
@@ -123,6 +123,7 @@ class SearchView(APIView):
             senior_user = SeniorUser.objects.filter(user=user).first()
             
             response_data["resumes"].append({
+                "score": score,
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
                 "keyword": resume.keyword,
