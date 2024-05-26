@@ -69,19 +69,20 @@ class BaseListView(APIView):
 class GetSeniorListView(BaseListView):
     model = EnterpriseUser
     filter_field = 'enterprise'
-    is_paid = None
+    is_completed = None
     
     def get(self, request, user_id):
         suggests = self.get_suggests_list(user_id)
         if suggests is None:
             return Response({"error": "Invalid user or no suggests found for this user."}, status=status.HTTP_400_BAD_REQUEST)
         
-        if self.is_paid is None:
+        if self.is_completed is None:
             pass
-        elif self.is_paid: 
-            suggests = suggests.filter(progress='is_paid')
+        elif self.is_completed: 
+            suggests = suggests.filter(progress='is_paid') | suggests.filter(progress='is_reviewed')
         else:
             suggests = Suggest.objects.exclude(progress='is_paid')
+            suggests = suggests.exclude(progress='is_reviewed')
         
         response_data = {
             "suggests": [
@@ -104,18 +105,18 @@ class GetSeniorListView(BaseListView):
         return Response(response_data, status=status.HTTP_200_OK)
     
 
-class GetPaidSeniorListView(GetSeniorListView):
-    is_paid = True
+class GetCompletedSeniorListView(GetSeniorListView):
+    is_completed = True
 
-    @swagger_auto_schema(tags=['기업 사용자의 결제 완료된 채용 제안 목록을 조회합니다.'])
+    @swagger_auto_schema(tags=['기업 사용자의 완료된 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
         return super().get(request, user_id)
 
 
-class GetUnpaidSeniorListView(GetSeniorListView):
-    is_paid = False
+class GetInProgressSeniorListView(GetSeniorListView):
+    is_completed = False
     
-    @swagger_auto_schema(tags=['기업 사용자의 결제되지 않은 채용 제안 목록을 조회합니다.'])
+    @swagger_auto_schema(tags=['기업 사용자의 진행 중인 채용 제안 목록을 조회합니다.'])
     def get(self, request, user_id):
         return super().get(request, user_id)
     
@@ -296,7 +297,7 @@ class UpdateProgressView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
         progress = request.data.get('progress')
-        if progress not in ['is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted']:
+        if progress not in ['is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted', 'is_reviewed']:
             return Response({"error": "Progress is invalid. Possible choices are 'is_pending', 'is_declined', 'is_cancelled', 'is_paid', 'is_accepted'."}
                             , status=status.HTTP_400_BAD_REQUEST)
         
@@ -307,6 +308,9 @@ class UpdateProgressView(APIView):
             suggest.is_enterprise_read = False 
         elif progress == 'is_cancelled':
             suggest.is_senior_read = False  
+            suggest.is_enterprise_read  = True 
+        elif progress == 'is_reviewed':
+            suggest.is_senior_read = True  
             suggest.is_enterprise_read  = True 
         suggest.save()
 
