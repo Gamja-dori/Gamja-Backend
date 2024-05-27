@@ -8,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from users.models import SeniorUser
 from django.core.exceptions import ObjectDoesNotExist
 from .create_senior_intro import create_intro;
+from recommend.recommendation import refresh_search_data
 
 def checkUserExistence(user_id):
     try:
@@ -60,6 +61,7 @@ class DeleteResumeAPIView(APIView):
         resume = checkResumeExistence(user_id, resume_id)
         if resume:
             resume.delete()
+            refresh_search_data()
             res = Response(
                 {
                     "message": "이력서가 성공적으로 삭제되었습니다."
@@ -135,6 +137,7 @@ class SubmitResumeAPIView(APIView):
             if serializer.is_valid():
                 resume.is_submitted = True
                 serializer.save()
+                refresh_search_data()
                 res = Response(
                     {
                         "resume_id": resume.id,
@@ -158,6 +161,7 @@ class EditResumeAPIView(APIView):
             if serializer.is_valid():
                 resume = serializer.update(resume, validated_data=request.data)
                 resume.save()
+                refresh_search_data()
                 res = Response(
                     {
                         "resume_id": resume_id,

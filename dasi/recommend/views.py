@@ -109,8 +109,11 @@ class SearchView(APIView):
             comment_types[2] = json.loads(skills)
             for skill in skills:
                 resumes = resumes.filter(skills__icontains=skill)
-                
-        return resumes, comment_types
+    
+        # 쿼리셋에서 ID만 추출
+        resume_ids = resumes.values_list('id', flat=True)
+        
+        return list(resume_ids), comment_types
         
         
     def create_search_result(self, data):
@@ -118,10 +121,10 @@ class SearchView(APIView):
         query = data.get("query")
         
         # 이력서 조건별 필터링
-        resumes, comment_types = self.get_filtered_resumes(data=data)
+        resume_ids, comment_types = self.get_filtered_resumes(data=data)
         
         # 유사도 점수 계산
-        search_result = search(query, resumes, comment_types, user_id)
+        search_result = search(query, resume_ids, comment_types, user_id)
 
         response_data = {
             "resumes": []
