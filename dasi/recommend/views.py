@@ -11,6 +11,14 @@ from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 import json
 from django.core.exceptions import ObjectDoesNotExist
+from users.models import Review
+
+def calcReviewAvg(senior):
+    reviews = Review.objects.filter(senior=senior)
+    if len(reviews) == 0:
+        return 0
+    avg = round(sum([r.score for r in reviews]) / len(reviews), 1)
+    return avg
 
 class MainView(APIView):
     permission_classes = [AllowAny]
@@ -31,6 +39,7 @@ class MainView(APIView):
             
             user = User.objects.filter(id=resume.user_id).first()
             senior_user = SeniorUser.objects.filter(user=user).first()
+            review_avg = calcReviewAvg(senior_user)
             response_data["resumes"].append({
                 "resume_id": resume.id,
                 "is_verified": resume.is_verified,
@@ -42,13 +51,14 @@ class MainView(APIView):
                 "commute_type": resume.commute_type,
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
+                "review_avg": review_avg,
             })
         
         return Response(
             data = response_data,
             status=status.HTTP_200_OK,
         )
-    
+
     
 class SearchView(APIView):
     permission_classes = [AllowAny] 
@@ -99,8 +109,11 @@ class SearchView(APIView):
             comment_types[2] = json.loads(skills)
             for skill in skills:
                 resumes = resumes.filter(skills__icontains=skill)
-                
-        return resumes, comment_types
+    
+        # 쿼리셋에서 ID만 추출
+        resume_ids = resumes.values_list('id', flat=True)
+        
+        return list(resume_ids), comment_types
         
         
     def create_search_result(self, data):
@@ -108,10 +121,10 @@ class SearchView(APIView):
         query = data.get("query")
         
         # 이력서 조건별 필터링
-        resumes, comment_types = self.get_filtered_resumes(data=data)
+        resume_ids, comment_types = self.get_filtered_resumes(data=data)
         
         # 유사도 점수 계산
-        search_result = search(query, resumes, comment_types, user_id)
+        search_result = search(query, resume_ids, comment_types, user_id)
 
         response_data = {
             "resumes": []
@@ -121,7 +134,7 @@ class SearchView(APIView):
             resume = Resume.objects.get(id=resume_id)
             user = User.objects.get(id=resume.user_id)
             senior_user = SeniorUser.objects.filter(user=user).first()
-            
+            review_avg = calcReviewAvg(senior_user)
             response_data["resumes"].append({
                 "score": score,
                 "resume_id": resume.id,
@@ -135,6 +148,7 @@ class SearchView(APIView):
                 "comments": comments,
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
+                "review_avg": review_avg,
             })
         
         return Response(
@@ -162,6 +176,7 @@ class ResumeDetailView(APIView):
                 resume.save()
                 user = User.objects.get(id=resume.user_id)
                 senior_user = SeniorUser.objects.filter(user=user).first()
+                review_avg = calcReviewAvg(senior_user)
                 res = Response(
                     {
                         "user_id": user.id,
@@ -170,6 +185,7 @@ class ResumeDetailView(APIView):
                         "is_verified": resume.is_verified,
                         "name": senior_user.name,
                         "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
+                        "review_avg": review_avg,
                         "resume": serializer.data,
                         "message": "이력서를 성공적으로 조회했습니다.",
                     },

@@ -1,14 +1,12 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from konlpy.tag import Hannanum
 from elasticsearch import Elasticsearch
 from resume.models import *
 from users.models import *
-import numpy as np
-import pickle
 import re, json
 
-es = Elasticsearch()
+es = Elasticsearch(
+        hosts=['http://es:9200'],
+        http_auth=("elastic", "changeme")
+    )
 
 def create_index():
     es.indices.create(
@@ -60,7 +58,7 @@ def delete_index():
     es.indices.delete(index='resumes') 
 
 
-def index_datas(resumes):
+def index_data(resumes):
     body = ""
     for resume in resumes:
         # 이력서로부터 키워드 추출
@@ -93,7 +91,7 @@ def index_datas(resumes):
     es.indices.refresh(index='resumes')  # 인덱스 리프레시
 
 
-def delete_datas():
+def delete_data():
     es.delete_by_query(
     index='resumes',
     body={
@@ -103,6 +101,14 @@ def delete_datas():
         }
     )
     es.indices.refresh(index='resumes')  # 인덱스 리프레시
+    
+    
+def refresh_search_data():
+    print("refresh data")
+    delete_data()
+    if not es.count(index='resumes')['count']:
+        resumes = Resume.objects.filter(is_submitted=True)
+        index_data(resumes)
 
 
 def get_final_score(score): 
@@ -112,7 +118,7 @@ def get_final_score(score):
     return final_score if final_score > 0 else 0 
 
 
-def search(project_overview, resumes, comment_types, user_id): 
+def search(project_overview, resume_ids, comment_types, user_id): 
     if user_id != -1:
         user = User.objects.get(id=user_id)
         if user.is_senior:
@@ -120,51 +126,59 @@ def search(project_overview, resumes, comment_types, user_id):
         else:
             member = EnterpriseUser.objects.get(user_id=user_id)
 
-    # 이력서 생성
-    if not es.indices.exists(index='resumes'):
-        delete_index() 
-        create_index()
-    
-    # 이력서 데이터 인덱싱
-    delete_datas()
+    # 인덱스 생성
+    if not es.indices.exists(index='resumes'): 
+        create_index()    
+        
     if not es.count(index='resumes')['count']:
-        index_datas(resumes)
+        resumes = Resume.objects.filter(is_submitted=True)
+        index_data(resumes)
           
-    # 검색
-    docs = es.search(index='resumes',
-        body={
+    # 검색 쿼리 설정
+    if project_overview:
+        search_body = {
             "query": {
-                "match": {
-                    "content": project_overview
+                "bool": {
+                    "must": {
+                        "match": {
+                            "content": project_overview
+                        }
+                    },
+                    "filter": {
+                        "terms": {
+                            "id": resume_ids
+                        }
+                    }
                 }
             }
         }
-    )
+    else:
+        search_body = {
+            "query": {
+                "terms": {
+                    "id": resume_ids
+                }
+            }
+        }
     
-    # (점수, 이력서 번호, 코멘트)
-    results = dict()
+    # 검색
+    docs = es.search(index='resumes', body=search_body)
     
-    # 이력서 ID 리스트
+    # 점수와 이력서 ID 저장
+    scores = dict()
     id_list = []
-    print(docs)
     for hit in docs['hits']["hits"]:
         resume_id = hit["_source"]["id"]
+        scores[resume_id] = hit["_score"] 
         id_list.append(resume_id)
-        similarity_score = hit["_score"]  
-        results[resume_id] = similarity_score
-    
-    resumes_cnt = docs['hits']['total']['value']
-    print(resumes_cnt, len(id_list))
-    
-    final_scores = [0] * len(id_list)
-    
-    # 이력서마다 코멘트 추가
-    for i in range(len(id_list)):
-        score = results[id_list[i]] # 점수 
-        final_score = get_final_score(score)
-        comments = []
         
-        if score:
+    # (점수, 이력서 ID, 코멘트)
+    results = [0] * len(id_list)
+    for i in range(len(id_list)):
+        comments = []
+        final_score = get_final_score(scores[id_list[i]])
+        
+        if final_score and project_overview:
             if user_id != -1:
                 comments.append({"commentType": 1, "comments": [member.name, final_score]}) # 코멘트 
             else:
@@ -185,11 +199,10 @@ def search(project_overview, resumes, comment_types, user_id):
             comments.append({"commentType": 4, "comments": [str(resume.career_year)]})
 
         # 최종 점수 산출
-        final_scores[i] = [final_score, id_list[i], comments]
+        results[i] = [final_score, id_list[i], comments]
 
     # 점수가 높은 순으로 정렬
-    print(final_scores)
-    final_resumes = sorted(final_scores, reverse=True) # (점수, 이력서 번호, 코멘트)
+    final_resumes = sorted(results, reverse=True) # (점수, 이력서 번호, 코멘트)
 
     # 결과 반환
     return final_resumes
