@@ -18,7 +18,7 @@ def create_index():
                 "my_analyzer": {
                 "type": "custom",
                 "tokenizer": "nori_tokenizer",
-                "filter": ["nori_filter", "stop_filter"],
+                "filter": ["nori_filter", "stop_filter", "lowercase", "asciifolding"],
                 "char_filter": ["html_strip"]
                 }
             },
@@ -104,7 +104,6 @@ def delete_data():
     
     
 def refresh_search_data():
-    print("refresh data")
     delete_data()
     if not es.count(index='resumes')['count']:
         resumes = Resume.objects.filter(is_submitted=True)
@@ -127,6 +126,7 @@ def search(project_overview, resume_ids, comment_types, user_id):
             member = EnterpriseUser.objects.get(user_id=user_id)
 
     # 인덱스 생성
+    delete_index()
     if not es.indices.exists(index='resumes'): 
         create_index()    
         
