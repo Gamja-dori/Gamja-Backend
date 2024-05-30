@@ -143,7 +143,7 @@ class PriorResumeSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data, resume):
         ocr_result = resume_ocr(validated_data.get('prior_resume_file'), validated_data.get('prior_resume_name'))
-        mask_result = mask_personal_info(ocr_result)
+        mask_result = mask_personal_info(ocr_result, resume)
         formatting_result = formatting_career(mask_result)
         # 경력사항 객체 생성 
         careers = []

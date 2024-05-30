@@ -80,12 +80,13 @@ def resume_ocr(image_file, image_file_name):
     return result_string
 
 # 개인 정보 가려내기
-def mask_personal_info(text):
-    # 예시: 전화번호, 이메일 주소를 가려냄
+def mask_personal_info(text, resume):
+    # 이름, 전화번호, 이메일 주소를 가려냄
+    name_pattern = re.compile(re.escape(resume.user.name))
     phone_number_pattern = re.compile(r'\b\d{3}[-.]?\d{4}[-.]?\d{4}\b')
     email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
     birthdate_pattern = re.compile(r'\b(\d{4})[년./\s-]?[\s]?(\d{1,2})[월./\s-]?[\s]?(\d{1,2})[일]?[생]?\b')
-		# 도로명 주소, 몇동몇호만 마스킹
+	# 도로명 주소, 몇동몇호만 마스킹
     # address_pattern = re.compile("(([가-힣A-Za-z·\d~\-\.]{2,}(로|길).[\d]+)|([가-힣A-Za-z·\d~\-\.]+(읍|동)\s)[\d]+)")
 
     # 호부터 다 남아있음
@@ -94,13 +95,12 @@ def mask_personal_info(text):
     # 호부터 다 없어짐 ex) 101호(명륜2가~~) -> 호(명륜2가~~) 없어짐
     # address_pattern = re.compile("(([가-힣A-Za-z·\d~\-\.]{2,}(도|시))|([가-힣A-Za-z·\d~\-\.]{2,}(시|군|구))|([가-힣A-Za-z·\d~\-\.]{2,}(읍|면))|([가-힣A-Za-z·\d~\-\.]{2,}(로|길).[\d]+)|([가-힣A-Za-z·\d~\-\.]+(읍|동)\s)[\d]+.*)")
 
-
     # 개인 정보 마스킹
-    masked_text = phone_number_pattern.sub('번호', text)
+    masked_text = name_pattern.sub('이름', text)
+    masked_text = phone_number_pattern.sub('번호', masked_text)
     masked_text = email_pattern.sub('메일', masked_text)
     #masked_text = birthdate_pattern.sub('생년월일', masked_text)
     masked_text = address_pattern.sub('주소', masked_text)
-
     return masked_text
 
 def formatting_career(text):
