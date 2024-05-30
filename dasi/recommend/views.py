@@ -52,6 +52,9 @@ class MainView(APIView):
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
                 "review_avg": review_avg,
+                "score": (LIMIT - cnt),
+                "view": resume.view,
+                "updated_at": resume.updated_at,
             })
         
         return Response(
@@ -149,6 +152,9 @@ class SearchView(APIView):
                 "name": senior_user.name,
                 "profile_image": "https://api.dasi-expert.com" + user.profile_image.url,
                 "review_avg": review_avg,
+                "score": comments[comments][0],
+                "view": resume.view,
+                "updated_at": resume.updated_at,
             })
         
         return Response(
