@@ -128,22 +128,31 @@ class LogoutView(APIView):
         return response
 
 
-class UserProfileView(APIView):
+class UserView(APIView):
     permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(tags=['사용자의 정보를 조회합니다.'])
-    def get(self, request, id):
+    
+    def get_user(self, id):
         try:
             user = User.objects.get(id=id)
+            return user
         except ObjectDoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return None
 
+
+    def get_member(self, user):
         if user.is_senior:
             member = SeniorUser.objects.get(user=user)
         elif user.is_enterprise:
             member = EnterpriseUser.objects.get(user=user)
-        else:
-            return Response({"error": "Invalid user type"}, status=status.HTTP_400_BAD_REQUEST)
+        return member
+
+
+    @swagger_auto_schema(tags=['사용자의 정보를 조회합니다.'])
+    def get(self, request, id):
+        user = self.get_user(id)        
+        if user is None:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        member = self.get_member(user)
         
         response_data = {
             "id": user.id,
@@ -163,6 +172,49 @@ class UserProfileView(APIView):
             response_data['is_certified'] = member.is_certified   
         
         return Response(response_data, status=status.HTTP_200_OK)
+    
+    
+    @swagger_auto_schema(tags=['사용자 정보를 수정합니다.'])
+    def put(self, request, id):
+        user = self.get_user(id)        
+        if user is None:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        member = self.get_member(user)
+        
+        if user.is_senior:
+            serializer = SeniorSerializer(member, data=request.data, partial=True)
+        else:
+            serializer = EnterpriseSerializer(member, data=request.data, partial=True)
+       
+        if serializer.is_valid():
+            member = serializer.update(member, validated_data=serializer.validated_data)
+            member.save()
+            res = Response(
+                {
+                    "user_id": member.user_id,
+                    "user": serializer.data,
+                    "message": "사용자 정보가 성공적으로 수정되었습니다."
+                },
+                status=status.HTTP_200_OK,
+            )
+            return res
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    @swagger_auto_schema(tags=['사용자를 삭제합니다.'])
+    def delete(self, request, id):
+        user = self.get_user(id)
+        if user is None:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        user.delete()
+        res = Response(
+            {
+                "message": "사용자가 성공적으로 삭제되었습니다."
+            },
+            status=status.HTTP_200_OK,
+        )
+        return res
 
 
 class ProfileImageView(APIView):
@@ -260,6 +312,7 @@ def checkReviewExistence(user_id, review_id):
             return False
         return review
     return False
+
 
 class GetReviewListView(APIView):
     permission_classes = [AllowAny]

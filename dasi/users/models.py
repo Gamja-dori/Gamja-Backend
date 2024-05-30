@@ -1,7 +1,7 @@
 from django.db import models
 from resume.models import Resume
 from suggest.models import Suggest
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
     
 class User(AbstractUser):
     id = models.AutoField(primary_key=True)
