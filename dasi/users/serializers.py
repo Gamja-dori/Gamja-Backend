@@ -31,6 +31,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+    def update(self, user, validated_data):
+        user.email = validated_data.get('email', user.email)
+        password = validated_data.get('password')
+        if password:
+            user.set_password(password)
+        user.save()
+        return user
+
+
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -53,7 +62,23 @@ class SeniorSerializer(serializers.ModelSerializer):
             phone_number=validated_data.pop('phone_number'),
         )
         return senior
+    
+    def update(self, senior, validated_data):
+        if "user" in validated_data:
+            user_data = validated_data.pop('user')
+            user = senior.user
+        
+            # user 업데이트
+            user_serializer = UserRegisterSerializer()
+            user_serializer.update(user, user_data)
 
+        # senioruser 업데이트
+        senior.name = validated_data.get('name', senior.name)
+        senior.phone_number = validated_data.get('phone_number', senior.phone_number)
+        senior.save()
+
+        return senior
+    
 
 class EnterpriseSerializer(serializers.ModelSerializer):
     user = UserRegisterSerializer(required=True)
@@ -74,6 +99,25 @@ class EnterpriseSerializer(serializers.ModelSerializer):
             is_certified=False
         )
         return enterprise
+    
+    def update(self, enterprise, validated_data):
+        if "user" in validated_data:
+            user_data = validated_data.pop('user')
+            user = enterprise.user
+        
+            # user 업데이트
+            user_serializer = UserRegisterSerializer()
+            user_serializer.update(user, user_data)
+
+        # enterpriseuser 업데이트
+        enterprise.name = validated_data.get('name', enterprise.name)
+        enterprise.phone_number = validated_data.get('phone_number', enterprise.phone_number)
+        enterprise.name = validated_data.get('company', enterprise.company)
+        enterprise.phone_number = validated_data.get('business_number', enterprise.business_number)
+        enterprise.save()
+
+        return enterprise
+    
     
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
