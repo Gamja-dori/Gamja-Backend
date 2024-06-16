@@ -4,7 +4,7 @@ from .views import *
 urlpatterns = [
     path('create/', CreateSuggestView.as_view()),
     path('enterprise/<int:user_id>/', GetSeniorListView.as_view()), 
-    path('enterprise/completed/<int:user_id>', GetCompletedSeniorListView.as_view()), 
+    path('enterprise/completed/<int:user_id>/', GetCompletedSeniorListView.as_view()), 
     path('enterprise/in-progress/<int:user_id>/', GetInProgressSeniorListView.as_view()), 
     path('notifications/enterprise/<int:user_id>/', GetEnterpriseNotificationsView.as_view()), 
     path('notifications/senior/<int:user_id>/', GetSeniorNotificationsView.as_view()), 

@@ -57,7 +57,7 @@ class BaseListView(APIView):
         if not (self.model == SeniorUser and user.is_senior) and not (self.model == EnterpriseUser and user.is_enterprise):
             return None        
         
-        member = self.model.objects.filter(user=user).first()
+        member = self.model.objects.get(user=user)
         if not member:
             return None
         
@@ -81,8 +81,7 @@ class GetSeniorListView(BaseListView):
         elif self.is_completed: 
             suggests = suggests.filter(progress='is_paid') | suggests.filter(progress='is_reviewed')
         else:
-            suggests = Suggest.objects.exclude(progress='is_paid')
-            suggests = suggests.exclude(progress='is_reviewed')
+            suggests = suggests.exclude(progress='is_paid').exclude(progress='is_reviewed')
         
         response_data = {
             "suggests": [
