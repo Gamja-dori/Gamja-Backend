@@ -8,7 +8,7 @@
     </a>
 </p>
 
-## 시작 가이드
+## 설치 및 실행
 
 1. 프로젝트 클론
 
@@ -57,8 +57,11 @@ python manage.py runserver
 ![MySQL](https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
 ### Deploy
+![NGINX](https://img.shields.io/badge/nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Github Actions](https://img.shields.io/badge/githubactions-24292E?style=for-the-badge&logo=githubactions&logoColor=white)
+![AWS](https://img.shields.io/badge/aws-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white)
+![Github Actions](https://img.shields.io/badge/githubactions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ### AI
 <p align="center">
@@ -154,7 +157,7 @@ dasi
 ## app 모듈별 설명
 각 기능은 https://api.dasi-expert.com/swagger 에서 테스트해보실 수 있습니다.
 
-### User App
+### 👨‍💼 User App
 #### 개요
 > 1. 사용자 정보 생성, 조회, 수정, 삭제
 > 2. jwt 토큰 기반 로그인 상태 관리
@@ -186,7 +189,7 @@ dasi
 
     시니어 사용자의 리뷰 등록, 목록 조회, 삭제
 
-### Resume App
+### 📑 Resume App
 #### 개요
 > 1. 이력서 생성 및 세부 정보 생성, 조회, 수정, 삭제 
 > 2. 기존 이력서에서 OCR로 텍스트 추출하여 반환 
@@ -220,7 +223,7 @@ dasi
 
     기존 이력서 복제 
 
-### Recommend App
+### 🔍 Recommend App
 #### 개요
 > 1. 인재 추천 AI를 거쳐 추천된 이력서 목록 반환
 > 2. 인재 목록 필터링
@@ -236,7 +239,7 @@ dasi
     
     이력서 상세 조회
 
-### Suggest App
+### 🤝 Suggest App
 #### 개요
 > 1. 채용 제안 생성 및 관리 
 > 2. 카카오페이와 연동하여 매칭 수수료 결제 
