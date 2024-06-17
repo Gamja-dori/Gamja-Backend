@@ -53,7 +53,7 @@ def create_user(data, user_type):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
-class SeniorUserCreate(APIView):
+class SeniorUserCreateView(APIView):
     permission_classes = [AllowAny] 
     
     @swagger_auto_schema(tags=['시니어 사용자 데이터를 생성합니다.'], request_body=SeniorSerializer)
@@ -67,7 +67,7 @@ class SeniorUserCreate(APIView):
         return response  
     
     
-class EnterpriseUserCreate(APIView):
+class EnterpriseUserCreateView(APIView):
     permission_classes = [AllowAny] 
     
     @swagger_auto_schema(tags=['기업 사용자 데이터를 생성합니다.'], request_body=EnterpriseSerializer)
