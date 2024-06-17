@@ -68,21 +68,10 @@ python manage.py runserver
 ![Github Actions](https://img.shields.io/badge/githubactions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ## AI
-<p align="center">
-    <img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/c1cf3604-0b24-40b8-bb7a-fc5e8a6ddff5" alt="Clova OCR" width="450"/>
-</p>
-Clova OCR을 이용해서 기존 이력서로부터 경력사항, 학력사항 정보를 추출했습니다.
-
-<p align="center">
-    <img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/958a27cd-4237-4e2d-9a91-27abe4fd342c" alt="OpenAI" width="450"/>
-</p>
-OpenAI를 이용하여 기존 이력서로부터 추출된 정보를 json 형식으로 포맷팅했습니다.
-또한 작성한 이력서를 바탕으로 전문가 소개를 자동 생성했습니다.
-
-<p align="center">
-    <img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/9d77bee9-2bbf-49bb-a4bb-e8662026de15" alt="ElasticSearch" width="450"/>
-</p>
-ElasticSearch를 검색 엔진으로 이용하여 데이터 역색인 구조를 바탕으로 기업의 인재 검색 속도를 높였습니다. 
+| Clova OCR | OpenAI | ElasticSearch |
+|---|---|---|
+| <p align="center"><img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/c1cf3604-0b24-40b8-bb7a-fc5e8a6ddff5" alt="Clova OCR" width="700"/></p> | <p align="center"><img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/958a27cd-4237-4e2d-9a91-27abe4fd342c" alt="OpenAI" width="200"/></p> | <p align="center"><img src="https://github.com/Gamja-dori/Gamja-Backend/assets/100199530/9d77bee9-2bbf-49bb-a4bb-e8662026de15" alt="ElasticSearch" width="300"/></p> |
+| Clova OCR을 이용해서 기존 이력서로부터 경력사항, 학력사항 정보를 추출했습니다. | OpenAI를 이용하여 기존 이력서로부터 추출된 정보를 json 형식으로 포맷팅했습니다. 또한 작성한 이력서를 바탕으로 전문가 소개를 자동 생성했습니다. | ElasticSearch를 검색 엔진으로 이용하여 데이터 역색인 구조를 바탕으로 기업의 인재 검색 속도를 높였습니다. |
 
 # 디렉토리 구조
 
