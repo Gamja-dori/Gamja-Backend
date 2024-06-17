@@ -3,8 +3,8 @@ from .views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path('signup/', SeniorUserCreate.as_view()),
-    path('enterprise/signup/', EnterpriseUserCreate.as_view()),
+    path('signup/', SeniorUserCreateView.as_view()),
+    path('enterprise/signup/', EnterpriseUserCreateView.as_view()),
     path('login/', LoginView.as_view()),
     path('enterprise/login/', LoginView.as_view()),
     path('logout/', LogoutView.as_view()),
