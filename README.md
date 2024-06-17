@@ -14,7 +14,7 @@
 
 ```sh
 git clone https://github.com/Gamja-dori/Gamja-Backend.git
-cd Gamja-Backend
+cd Gamja-Backend/dasi
 ```
 
 2. 가상환경 설정
