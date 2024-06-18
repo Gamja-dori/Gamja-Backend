@@ -232,6 +232,9 @@ dasi
 - `CopyResumeAPIView`
 
     기존 이력서 복제 
+### 테스트용 이력서 pdf 파일 다운로드
+- [이력서 1](https://drive.google.com/file/d/1h0VmAbYwv0TxJZAf2YToHj4HC-jy85pr/view)
+- [이력서 2](https://drive.google.com/file/d/16Vgu5TiCNtf04bNLRF3X-U-DX37jK_mG/view)
 
 ## 🔍 Recommend App
 ### 개요
