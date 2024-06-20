@@ -43,7 +43,7 @@ venv\Scripts\activate
 3. 필수 패키지 설치
 
 ```sh
-pip install -r dasi/requirements.txt
+pip install -r requirements.txt
 ```
 
 4. 환경 변수 설정
