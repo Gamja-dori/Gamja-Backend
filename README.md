@@ -10,6 +10,8 @@
 
 ## 📌 목차
 - [설치 및 실행](#설치-및-실행)
+
+- [시스템 아키텍처](#시스템-아키텍처)
     
 - [기술 스택](#기술-스택)
   - [Development](#development)
@@ -70,6 +72,11 @@ KAKAO_REST_API_KEY=
 ```sh
 python manage.py runserver
 ```
+
+# 시스템 아키텍처
+<p align="center">
+    <img width="1087" alt="Image" src="https://github.com/user-attachments/assets/0bb8c7fc-7562-4fbe-97c3-d5e783dbb964" />
+</p>
 
 # 기술 스택
 
